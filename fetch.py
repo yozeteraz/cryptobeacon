@@ -2,6 +2,9 @@
 """CryptoBeacon — fetch market data, compute scores, write data.json.
 
 Runs 3x/day via GitHub Actions. No external deps (stdlib only).
+
+Note: Binance API jest zablokowane dla US data centerów (HTTP 451),
+więc na GitHub Actions używamy CoinGecko (działa globalnie).
 """
 
 import json
@@ -21,7 +24,7 @@ MONTHS_PL = ["stycznia", "lutego", "marca", "kwietnia", "maja", "czerwca",
              "lipca", "sierpnia", "września", "października", "listopada", "grudnia"]
 
 
-def fetch_json(url, timeout=15):
+def fetch_json(url, timeout=20):
     req = urllib.request.Request(url, headers={"User-Agent": "cryptobeacon/0.1"})
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return json.loads(r.read())
@@ -44,12 +47,12 @@ def score_from_pct(pct):
     return int(max(0, min(100, round(50 + pct * 2.5))))
 
 
-def pct_change(klines, days):
-    """% change over the last N days from daily klines."""
-    if len(klines) < days + 1:
+def pct_change_from_prices(prices, days):
+    """% change over the last N days from a daily prices array."""
+    if len(prices) < days + 1:
         return 0.0
-    close_now = float(klines[-1][4])
-    close_then = float(klines[-1 - days][4])
+    close_now = prices[-1]
+    close_then = prices[-1 - days]
     return (close_now - close_then) / close_then * 100
 
 
@@ -57,9 +60,9 @@ def cycle_score(now):
     """Score the BTC cycle position. Halving = 30. Peak ~month 18 = 90. Decay after."""
     months = (now - HALVING_DATE).days / 30.4
     if months < 18:
-        s = 30 + (months / 18) * 60  # linear ramp 30→90
+        s = 30 + (months / 18) * 60
     else:
-        s = 90 - (months - 18) * 5   # decay after peak
+        s = 90 - (months - 18) * 5
     return int(max(0, min(100, round(s))))
 
 
@@ -110,43 +113,64 @@ def delta(arr):
 def main():
     print("Fetching data...")
 
-    btc_24 = fetch_json("https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT")
-    bnb_24 = fetch_json("https://api.binance.com/api/v3/ticker/24hr?symbol=BNBUSDT")
-    btc_klines = fetch_json("https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=100")
-    bnb_klines = fetch_json("https://api.binance.com/api/v3/klines?symbol=BNBUSDT&interval=1d&limit=100")
+    # CoinGecko simple prices (current price, 24h change, 24h volume)
+    prices_resp = fetch_json(
+        "https://api.coingecko.com/api/v3/simple/price"
+        "?ids=bitcoin,binancecoin&vs_currencies=usd"
+        "&include_24hr_change=true&include_24hr_vol=true"
+    )
+    btc_p = prices_resp["bitcoin"]
+    bnb_p = prices_resp["binancecoin"]
 
+    btc_price = btc_p["usd"]
+    bnb_price = bnb_p["usd"]
+    btc_24h = btc_p["usd_24h_change"]
+    bnb_24h = bnb_p["usd_24h_change"]
+    btc_vol = btc_p["usd_24h_vol"]
+    bnb_vol = bnb_p["usd_24h_vol"]
+
+    # CoinGecko market chart (daily prices + volumes, last 95 days)
+    btc_chart = fetch_json(
+        "https://api.coingecko.com/api/v3/coins/bitcoin/market_chart"
+        "?vs_currency=usd&days=95&interval=daily"
+    )
+    bnb_chart = fetch_json(
+        "https://api.coingecko.com/api/v3/coins/binancecoin/market_chart"
+        "?vs_currency=usd&days=95&interval=daily"
+    )
+    btc_prices = [p[1] for p in btc_chart["prices"]]
+    bnb_prices = [p[1] for p in bnb_chart["prices"]]
+    btc_vols = [v[1] for v in btc_chart["total_volumes"]]
+    bnb_vols = [v[1] for v in bnb_chart["total_volumes"]]
+
+    btc_7d = pct_change_from_prices(btc_prices, 7)
+    btc_30d = pct_change_from_prices(btc_prices, 30)
+    btc_90d = pct_change_from_prices(btc_prices, 90)
+    bnb_7d = pct_change_from_prices(bnb_prices, 7)
+    bnb_30d = pct_change_from_prices(bnb_prices, 30)
+    bnb_90d = pct_change_from_prices(bnb_prices, 90)
+
+    # Volume vs 7d average
+    btc_vol_7d_avg = sum(btc_vols[-8:-1]) / 7 if len(btc_vols) >= 8 else btc_vol
+    bnb_vol_7d_avg = sum(bnb_vols[-8:-1]) / 7 if len(bnb_vols) >= 8 else bnb_vol
+    btc_vol_vs_7d = (btc_vol / btc_vol_7d_avg - 1) * 100 if btc_vol_7d_avg else 0.0
+    bnb_vol_vs_7d = (bnb_vol / bnb_vol_7d_avg - 1) * 100 if bnb_vol_7d_avg else 0.0
+
+    # BNB/BTC ratio change 7d
+    if len(btc_prices) > 7 and len(bnb_prices) > 7:
+        bnb_btc_now = bnb_prices[-1] / btc_prices[-1]
+        bnb_btc_then = bnb_prices[-8] / btc_prices[-8]
+        bnb_vs_btc_7d = (bnb_btc_now / bnb_btc_then - 1) * 100
+    else:
+        bnb_vs_btc_7d = 0.0
+
+    # CoinGecko global (BTC dominance)
     cg = fetch_json("https://api.coingecko.com/api/v3/global")
     btc_dom = cg["data"]["market_cap_percentage"]["btc"]
 
+    # alternative.me Fear & Greed
     fng_resp = fetch_json("https://api.alternative.me/fng/?limit=1")
     fng = int(fng_resp["data"][0]["value"])
-
-    btc_price = float(btc_24["lastPrice"])
-    bnb_price = float(bnb_24["lastPrice"])
-    btc_24h = float(btc_24["priceChangePercent"])
-    bnb_24h = float(bnb_24["priceChangePercent"])
-    btc_7d = pct_change(btc_klines, 7)
-    btc_30d = pct_change(btc_klines, 30)
-    btc_90d = pct_change(btc_klines, 90)
-    bnb_7d = pct_change(bnb_klines, 7)
-    bnb_30d = pct_change(bnb_klines, 30)
-    bnb_90d = pct_change(bnb_klines, 90)
-
-    btc_vol = float(btc_24["quoteVolume"])
-    bnb_vol = float(bnb_24["quoteVolume"])
-    btc_vols_7d = [float(k[7]) for k in btc_klines[-7:]]
-    bnb_vols_7d = [float(k[7]) for k in bnb_klines[-7:]]
-    btc_vol_vs_7d = (btc_vol / (sum(btc_vols_7d) / len(btc_vols_7d)) - 1) * 100 if btc_vols_7d else 0.0
-    bnb_vol_vs_7d = (bnb_vol / (sum(bnb_vols_7d) / len(bnb_vols_7d)) - 1) * 100 if bnb_vols_7d else 0.0
-
-    # BNB/BTC 7d
-    btc_close_now = float(btc_klines[-1][4])
-    bnb_close_now = float(bnb_klines[-1][4])
-    btc_close_7d_ago = float(btc_klines[-8][4]) if len(btc_klines) > 7 else btc_close_now
-    bnb_close_7d_ago = float(bnb_klines[-8][4]) if len(bnb_klines) > 7 else bnb_close_now
-    bnb_btc_now = bnb_close_now / btc_close_now
-    bnb_btc_7d_ago = bnb_close_7d_ago / btc_close_7d_ago
-    bnb_vs_btc_7d = (bnb_btc_now / bnb_btc_7d_ago - 1) * 100
 
     print(f"  BTC: ${btc_price:.0f} ({btc_24h:+.1f}% 24h)")
     print(f"  BNB: ${bnb_price:.0f} ({bnb_24h:+.1f}% 24h)")
@@ -159,14 +183,11 @@ def main():
     score_90d = (score_from_pct(btc_90d) + score_from_pct(bnb_90d)) // 2
     score_cycle = cycle_score(datetime.now())
 
-    # Per-asset scores (F&G weight 1, 24h move weight 2)
     btc_score = (fng + score_from_pct(btc_24h) * 2) // 3
     bnb_score = (fng + score_from_pct(bnb_24h) * 2) // 3
 
-    # DCA: TAK unless we're in mania (score >= 80)
     dca = "TAK" if score_24h < 80 else "NIE"
 
-    # Push to history
     history = load_history()
     hero_hist = push_score(history, "hero", score_24h)
     dzis_hist = push_score(history, "dzis", score_24h)

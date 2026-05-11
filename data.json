@@ -1,17 +1,19 @@
 {
-  "fetched_at": "2026-05-11T21:09:46.384732+00:00",
+  "fetched_at": "2026-05-11T21:14:33.820710+00:00",
   "header_label": "poniedziałek, 11 maja",
   "hero": {
     "score": 51,
     "delta": 0,
     "mood": "Spokój",
     "history": [
+      51,
       51
     ]
   },
   "dca": {
     "decision": "TAK",
     "history": [
+      1,
       1
     ]
   },
@@ -24,6 +26,7 @@
       "delta": 0,
       "mood": "Spokój",
       "history": [
+        51,
         51
       ]
     },
@@ -35,6 +38,7 @@
       "delta": 0,
       "mood": "Wzmocnienie",
       "history": [
+        61,
         61
       ]
     },
@@ -46,6 +50,7 @@
       "delta": 0,
       "mood": "Hossa",
       "history": [
+        76,
         76
       ]
     },
@@ -57,6 +62,7 @@
       "delta": 0,
       "mood": "Hossa",
       "history": [
+        82,
         82
       ]
     },
@@ -68,6 +74,7 @@
       "delta": 0,
       "mood": "Wzmocnienie",
       "history": [
+        56,
         56
       ]
     }
@@ -81,16 +88,17 @@
       "delta": 0,
       "mood": "Spokój",
       "history": [
+        51,
         51
       ],
       "stats": [
         {
           "label": "Cena",
-          "value": "$81 774",
+          "value": "$81 700",
           "changes": [
             {
               "tf": "24h",
-              "val": 1.2
+              "val": 1.3
             },
             {
               "tf": "7d",
@@ -98,14 +106,14 @@
             },
             {
               "tf": "30d",
-              "val": 12.0
+              "val": 11.8
             }
           ]
         },
         {
           "label": "Wolumen 24h",
-          "value": "$1,3B",
-          "change": 12
+          "value": "$38,8B",
+          "change": 5
         },
         {
           "label": "Dominacja",
@@ -122,6 +130,7 @@
       "delta": 0,
       "mood": "Spokój",
       "history": [
+        52,
         52
       ],
       "stats": [
@@ -131,22 +140,22 @@
           "changes": [
             {
               "tf": "24h",
-              "val": 1.6
+              "val": 1.7
             },
             {
               "tf": "7d",
-              "val": 6.5
+              "val": 6.4
             },
             {
               "tf": "30d",
-              "val": 9.2
+              "val": 9.1
             }
           ]
         },
         {
           "label": "Wolumen 24h",
-          "value": "$116M",
-          "change": 25
+          "value": "$1,2B",
+          "change": -1
         },
         {
           "label": "BNB / BTC",
