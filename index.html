@@ -150,7 +150,7 @@
     padding: 12px 14px;
   }
   .cell .cell-name { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 8px; }
-  .strip.time .cell .cell-name { min-height: 32px; }
+  .strip.time .cell .cell-name { font-size: 10px; letter-spacing: 0.04em; white-space: nowrap; }
   .cell .cell-score-row { display: flex; align-items: baseline; gap: 12px; margin-bottom: 6px; }
   .cell .cell-trend { font-size: 16px; font-weight: 700; line-height: 1; color: var(--cell-color); }
   .cell .cell-score { font-size: 28px; font-weight: 700; line-height: 1; color: var(--cell-color); }
@@ -313,7 +313,7 @@ const TIME = [
       { name:"Wolumen",  score:81, raw:"+47% vs poprz. kwartał" }
     ]
   },
-  { key:"cykl", name:"Cykl", sub:"od halvingu", score:64, delta:+2, ref:"vs miesiąc temu", mood:"Hossa wczesna",
+  { key:"cykl", name:"od halvingu", sub:null, score:64, delta:+2, ref:"vs miesiąc temu", mood:"Hossa wczesna",
     history:[58, 60, 61, 62, 63, 63, 64],
     why:"13 miesięcy po halvingu — historycznie szczyt cyklu wypada między 14. a 20. miesiącem. Daleko od ATH ($3,2T z grudnia 2024), ale trend nienaruszony.",
     dims:[
