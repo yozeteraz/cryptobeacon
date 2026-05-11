@@ -179,12 +179,10 @@
   .events ul { margin: 0; padding: 0; list-style: none; }
   .events li { padding: 14px 0; border-bottom: 1px solid var(--border); display: flex; gap: 14px; font-size: 13.5px; align-items: flex-start; }
   .events li:last-child { border-bottom: none; }
-  .events .tags { display: flex; gap: 4px; flex-shrink: 0; }
-  .events .tag { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; padding: 4px 9px; border-radius: 4px; font-weight: 700; white-space: nowrap; }
-  .tag.btc { background: rgba(247,147,26,0.15); color: #f7931a; }
-  .tag.bnb { background: rgba(240,185,11,0.15); color: #f0b90b; }
   .events .when { color: var(--muted-2); font-size: 11px; min-width: 64px; padding-top: 2px; }
   .events .ev-text { flex: 1; color: #d3d7e0; line-height: 1.55; }
+  .coin-btc { color: #f7931a; font-weight: 600; }
+  .coin-bnb { color: #f0b90b; font-weight: 600; }
 
   footer {
     margin-top: 36px; padding-top: 22px; border-top: 1px solid var(--border);
@@ -281,10 +279,10 @@
     <p class="section-sub">Co działo się wokół Binance, regulacji krypto i makroekonomii — żebyś wiedział, jakie zdarzenia mogły wpłynąć na wyniki powyżej.</p>
     <div class="events">
       <ul>
-        <li><span class="when">3h temu</span><span class="tags"><span class="tag btc">BTC</span><span class="tag bnb">BNB</span></span><div class="ev-text">Fed sygnalizuje brak obniżek stóp do końca Q3 — krzywa rentowności płaska, dolar mocniejszy o 0,6%. Negatywne dla całego rynku krypto.</div></li>
-        <li><span class="when">7h temu</span><span class="tags"><span class="tag bnb">BNB</span></span><div class="ev-text">Binance raport kwartalny: wolumen +18% q/q, przychody $1,2B. Następny BNB burn szacowany na ~$840M za ~23 dni.</div></li>
-        <li><span class="when">11h temu</span><span class="tags"><span class="tag btc">BTC</span><span class="tag bnb">BNB</span></span><div class="ev-text">SEC odracza decyzję o ETF na SOL o kolejne 60 dni — neutralne dla BTC/BNB, lekko negatywne dla altów.</div></li>
-        <li><span class="when">18h temu</span><span class="tags"><span class="tag btc">BTC</span></span><div class="ev-text">Wpłaty BTC na giełdy +14% vs 7-dniowa średnia. 4 duże transakcje &gt;1000 BTC w stronę Binance — możliwa presja sprzedażowa.</div></li>
+        <li><span class="when">3h temu</span><div class="ev-text">Fed sygnalizuje brak obniżek stóp do końca Q3 — krzywa rentowności płaska, dolar mocniejszy o 0,6%. Negatywne dla <span class="coin-btc">BTC</span> i <span class="coin-bnb">BNB</span>.</div></li>
+        <li><span class="when">7h temu</span><div class="ev-text">Binance raport kwartalny: wolumen +18% q/q, przychody $1,2B. Następny <span class="coin-bnb">BNB</span> burn szacowany na ~$840M za ~23 dni.</div></li>
+        <li><span class="when">11h temu</span><div class="ev-text">SEC odracza decyzję o ETF na SOL o kolejne 60 dni — neutralne dla <span class="coin-btc">BTC</span>/<span class="coin-bnb">BNB</span>, lekko negatywne dla altów.</div></li>
+        <li><span class="when">18h temu</span><div class="ev-text">Wpłaty <span class="coin-btc">BTC</span> na giełdy +14% vs 7-dniowa średnia. 4 duże transakcje &gt;1000 <span class="coin-btc">BTC</span> w stronę Binance — możliwa presja sprzedażowa.</div></li>
       </ul>
     </div>
   </section>

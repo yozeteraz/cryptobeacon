@@ -81,21 +81,37 @@ Filozofia: rynek jest w dużej mierze efektywny i krótkoterminowo emocjonalny, 
 
 **Koszt:** ~$1–2/miesiąc API (3× dziennie × ~3k tokens/refresh).
 
-## Źródła danych — zatwierdzone, wszystkie darmowe
+## Źródła danych — zweryfikowane 2026-05-11
 
-| Źródło | Co | Notes |
+> Status każdego źródła sprawdzony bezpośrednim HTTP probe. Dostępność i pricing API się zmieniają — przy starcie etapu 1 zrobić quick re-check.
+
+### Działa darmowo, bez klucza
+
+| Źródło | Endpoint | Co | Notes |
+|---|---|---|---|
+| **Binance Spot** | `api.binance.com/api/v3/ticker/24hr` | Ceny BTC/BNB, wolumeny 24h | Public, bez rejestracji |
+| **Binance Futures** | `fapi.binance.com/fapi/v1/premiumIndex` | Funding rates, premium index | Public, bez rejestracji |
+| **CoinGecko global** | `api.coingecko.com/api/v3/global` | Dominacja BTC (`market_cap_percentage.btc`), total market cap | Bez klucza. Rate limit OK do naszego use case (3×/dzień) |
+| **alternative.me** | `api.alternative.me/fng/?limit=1` | Fear & Greed Index | Bez klucza. **NIE z CoinGecko** (poprzedni plan się mylił) |
+| **mempool.space** | `mempool.space/api/...` | BTC on-chain: bloki, mempool, address stats | Bez klucza. Dla "wpłat na Binance" potrzebujemy własnej listy adresów (patrz "Co zamiast Arkham") |
+| **CoinDesk RSS** | `coindesk.com/arc/outboundfeeds/rss?outputType=xml` | Newsy, regulacje | Bez slash przed `?` (poprzedni URL → 308 redirect) |
+| **CoinTelegraph RSS** | `cointelegraph.com/rss` | Newsy, listings | Standardowy RSS |
+| **Binance Announcements** | `binance.com/bapi/composite/v1/public/cms/article/list/query?type=1&pageNo=1&pageSize=10` | Listings, burns, regulacje | **Nie RSS** — JSON od wewnętrznego CMS Binance (nieoficjalne, stabilne; jeśli zmienią CMS, padnie) |
+
+### Wymagało zmiany strategii (poprzedni plan był nierealny)
+
+| Co chcieliśmy | Czemu nie działa | Co zamiast |
 |---|---|---|
-| Binance API (spot + futures) | Ceny BTC/BNB, wolumeny, funding rates, open interest | Główne źródło, bez rejestracji do public endpoints |
-| CoinGecko API | Dominacja BTC, kapitalizacja rynku, Fear & Greed | Free tier wystarczy |
-| mempool.space | BTC on-chain, transakcje, mempool | Dla BTC napływów na giełdy |
-| BscScan API | BNB Chain — transakcje, gas, aktywność | Dla BNB on-chain |
-| Whale Alert | Duże transakcje BTC/BNB | Free tier (Twitter/RSS feed) |
-| Arkham Intelligence | Etykiety portfeli (które należą do Binance) | Free konto |
-| RSS: Binance Announcements + CoinDesk + CoinTelegraph | Newsy, listings, regulacje | Standardowe RSS |
+| **BscScan API** dla BNB on-chain | V1 deprecated; Etherscan V2 multichain dla BSC wymaga paid plan (`"Free API access is not supported for this chain"`) | **BSC RPC** bezpośrednio: `bsc-dataseed.binance.org` (darmowe, JSON-RPC, bez klucza). Wymaga pracy nad `eth_call`/`getLogs`. Albo MVP-cięcie: BNB on-chain ograniczony do tego co da się wyciągnąć z Binance API |
+| **Whale Alert** dla dużych transakcji | Free tier wymaga klucza + 10 req/min + ostatnia 1h + min $500k. Twitter feed za paywallem od 2023 | Dla BTC: własna logika nad mempool.space — filtr transakcji na/z hardcoded listy adresów Binance, próg np. >100 BTC. Dla BNB: w MVP pomijamy |
+| **Arkham Intelligence** dla etykiet portfeli | Web UI nie ma stabilnego endpointu; API wymaga paid plan | **Hardcoded lista** znanych Binance hot/cold wallets (~15–20 publicznie udokumentowanych adresów, np. `34xp4vRoCGJym3xR7yCVPFHoCNxv4Twseo`) |
 
-**Pominięte świadomie:**
-- Glassnode / CryptoQuant (płatne, niepotrzebne dla naszej skali)
-- Płatne API sentymentu z Twittera (szumne, mało wartościowe)
+### Świadomie pominięte
+
+- **Glassnode / CryptoQuant** — płatne, niepotrzebne dla naszej skali
+- **Płatne API sentymentu z Twittera** — szumne, mało wartościowe
+- **Whale Alert paid (~$50/mc)** — sztywne limity, niewart kosztu vs własna logika na mempool.space
+- **Arkham paid** — jw., własna lista wystarczy
 
 ## Plan etapów
 
