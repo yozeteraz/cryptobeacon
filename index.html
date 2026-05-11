@@ -147,11 +147,10 @@
 
   .cell {
     background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
-    padding: 12px 14px; cursor: pointer; user-select: none;
-    transition: transform 0.1s ease, border-color 0.15s ease;
+    padding: 12px 14px;
   }
-  .cell:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.14); }
   .cell .cell-name { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 8px; }
+  .strip.time .cell .cell-name { min-height: 32px; }
   .cell .cell-score-row { display: flex; align-items: baseline; gap: 12px; margin-bottom: 6px; }
   .cell .cell-trend { font-size: 16px; font-weight: 700; line-height: 1; color: var(--cell-color); }
   .cell .cell-score { font-size: 28px; font-weight: 700; line-height: 1; color: var(--cell-color); }
@@ -159,27 +158,6 @@
   .cell .cell-spark polyline { stroke: var(--cell-color); stroke-width: 1.5; fill: none; }
   .cell .cell-spark .dot { fill: var(--cell-color); }
   .cell .cell-mood { font-size: 12px; color: var(--text); opacity: 0.9; }
-  .cell.selected { border-color: var(--accent); }
-
-  /* Details panel */
-  .details {
-    background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
-    padding: 22px 24px; min-height: 70px;
-    transition: border-color 0.2s ease;
-  }
-  .details.active { border-color: rgba(196,168,120,0.4); }
-  .details .placeholder { color: var(--muted-2); font-size: 13px; font-style: italic; }
-  .details h4 { margin: 0 0 4px; font-size: 16px; font-weight: 600; }
-  .details .sub-h { color: var(--muted); font-size: 12px; margin-bottom: 14px; }
-  .details .why { font-size: 13.5px; color: #c8cdd9; margin-bottom: 18px; line-height: 1.6; }
-  .details .breakdown { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
-  .details .dim {
-    background: var(--bg-soft); border: 1px solid var(--border); border-radius: 8px;
-    padding: 12px 14px;
-  }
-  .details .dim .dim-name { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 6px; }
-  .details .dim .dim-score { font-size: 20px; font-weight: 700; line-height: 1; color: var(--cell-color); }
-  .details .dim .dim-raw { font-size: 11px; color: var(--muted); font-family: ui-monospace, "SF Mono", Menlo, monospace; margin-top: 6px; }
 
   /* Events */
   .events { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 6px 22px; }
@@ -201,14 +179,11 @@
   .legend .lbl { color: var(--muted-2); font-size: 10px; margin: 0 4px; }
   .copyright { width: 100%; text-align: center; padding-top: 18px; margin-top: 14px; border-top: 1px solid var(--border); color: var(--muted-2); font-size: 11px; }
 
-  @media (max-width: 393px) {
+  @media (max-width: 600px) {
     .wrap { padding: 20px 16px; }
-    .hero { grid-template-columns: 1fr; text-align: left; padding: 22px; }
-    .hero .dial { width: 100px; height: 100px; }
-    .hero .dial .score { font-size: 28px; }
-    .hero h2 { font-size: 18px; }
+    .hero { grid-template-columns: 1fr; }
     .strip.time { grid-template-columns: repeat(2, 1fr); }
-    .strip.assets { grid-template-columns: repeat(2, 1fr); }
+    .asset-row { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -255,7 +230,7 @@
   <section class="hero-narrative">
     <div>
       <div class="label">Co się dzieje</div>
-      <p>BTC <strong>−3,2%</strong> po jastrzębich sygnałach z Fed, ale wolumen sprzedażowy umiarkowany — to korekta, nie kapitulacja. Cykl dalej konstruktywny, a <strong>BNB</strong> trzyma się lepiej od rynku: Binance kwartalnie zarobił rekordowo, burn za ~23 dni.</p>
+      <p><span class="coin-btc">BTC</span> <strong>−3,2%</strong> po jastrzębich sygnałach z Fed, ale wolumen sprzedażowy umiarkowany — to korekta, nie kapitulacja. Cykl dalej konstruktywny, a <span class="coin-bnb">BNB</span> trzyma się lepiej od rynku: Binance kwartalnie zarobił rekordowo, burn za ~23 dni.</p>
     </div>
   </section>
 
@@ -269,14 +244,6 @@
     <h3 class="section">Aktywa</h3>
     <p class="section-sub">BTC i BNB osobno — sentyment, surowa cena, wolumen i pozycja względem rynku. Tu zobaczysz, kiedy BNB pokazuje siłę niezależną od BTC.</p>
     <div class="assets-grid" id="asset-grid"></div>
-  </section>
-
-  <section class="block">
-    <h3 class="section">Komentarz</h3>
-    <p class="section-sub">Kliknij komórkę powyżej, żeby zobaczyć krótkie wyjaśnienie „dlaczego tyle".</p>
-    <div class="details" id="details">
-      <div class="placeholder">Kliknij dowolną komórkę powyżej, żeby zobaczyć komentarz.</div>
-    </div>
   </section>
 
   <section class="block">
@@ -430,7 +397,6 @@ function sparklineSvg(values, w=100, h=22) {
 function renderCell(container, item) {
   const div = document.createElement("div");
   div.className = "cell";
-  div.dataset.key = item.key;
   div.style.setProperty("--cell-color", scoreColor(item.score));
   const d = deltaPill(item.delta);
   div.innerHTML = `
@@ -442,22 +408,7 @@ function renderCell(container, item) {
     ${sparklineSvg(item.history)}
     <div class="cell-mood">${item.mood}</div>
   `;
-  div.addEventListener("click", () => {
-    document.querySelectorAll(".cell.selected").forEach(c => c.classList.remove("selected"));
-    div.classList.add("selected");
-    showDetails(item);
-  });
   container.appendChild(div);
-}
-
-function showDetails(item) {
-  const panel = document.getElementById("details");
-  panel.classList.add("active");
-  panel.style.setProperty("--cell-color", scoreColor(item.score));
-  panel.innerHTML = `
-    <h4>${item.name} <span style="opacity:.55;font-weight:400">· ${item.mood}</span></h4>
-    <div class="why">${item.why}</div>
-  `;
 }
 
 function renderAssetRow(container, item) {
@@ -467,7 +418,6 @@ function renderAssetRow(container, item) {
   // Score cell (same as time cell)
   const cell = document.createElement("div");
   cell.className = "cell";
-  cell.dataset.key = item.key;
   cell.style.setProperty("--cell-color", scoreColor(item.score));
   const d = deltaPill(item.delta);
   cell.innerHTML = `
@@ -479,11 +429,6 @@ function renderAssetRow(container, item) {
     ${sparklineSvg(item.history)}
     <div class="cell-mood">${item.mood}</div>
   `;
-  cell.addEventListener("click", () => {
-    document.querySelectorAll(".cell.selected").forEach(c => c.classList.remove("selected"));
-    cell.classList.add("selected");
-    showDetails(item);
-  });
   row.appendChild(cell);
 
   // Stat blocks
