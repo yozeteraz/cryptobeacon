@@ -137,6 +137,13 @@
   .stat .stat-change.down { color: #f87171; }
   .stat .stat-change.flat { color: var(--muted-2); }
   .stat .stat-sub { font-size: 11px; color: var(--muted-2); margin-top: 6px; }
+  .stat-changes { display: flex; flex-direction: column; gap: 2px; margin-top: 8px; }
+  .stat-tf-row { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; line-height: 1.5; }
+  .stat-tf { color: var(--muted-2); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+  .stat-tf-val { font-weight: 600; }
+  .stat-tf-val.up { color: #4ade80; }
+  .stat-tf-val.down { color: #f87171; }
+  .stat-tf-val.flat { color: var(--muted-2); }
 
   .cell {
     background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
@@ -192,6 +199,7 @@
   .legend { display: flex; gap: 4px; align-items: center; }
   .legend .swatch { display: inline-block; width: 26px; height: 12px; border-radius: 2px; }
   .legend .lbl { color: var(--muted-2); font-size: 10px; margin: 0 4px; }
+  .copyright { width: 100%; text-align: center; padding-top: 18px; margin-top: 14px; border-top: 1px solid var(--border); color: var(--muted-2); font-size: 11px; }
 
   @media (max-width: 393px) {
     .wrap { padding: 20px 16px; }
@@ -213,15 +221,12 @@
         <text x="360" y="60" text-anchor="middle" dominant-baseline="central" font-family="Helvetica Neue, Helvetica, Inter, Arial, sans-serif" font-weight="500" font-size="96" letter-spacing="-1.44" fill="currentColor" style="font-feature-settings: 'liga' 0, 'calt' 0;">CryptoBeacon</text>
       </svg>
     </div>
-    <div class="meta-right">
-      <div class="sub">poniedziałek, 11 maja 2026</div>
-    </div>
   </header>
 
   <section class="hero">
     <div class="hero-card" style="--cell-color: var(--c-30);">
       <div>
-        <div class="hero-label">11 maja</div>
+        <div class="hero-label">poniedziałek, 11 maja</div>
         <div class="hero-score-row">
           <div class="hero-score">42</div>
           <span class="cell-trend down">↓ 8</span>
@@ -267,10 +272,10 @@
   </section>
 
   <section class="block">
-    <h3 class="section">Szczegóły</h3>
-    <p class="section-sub">Rozwinięcie wybranej komórki: z czego składa się wynik, jakie surowe dane go napędzają i krótki komentarz „dlaczego tyle".</p>
+    <h3 class="section">Komentarz</h3>
+    <p class="section-sub">Kliknij komórkę powyżej, żeby zobaczyć krótkie wyjaśnienie „dlaczego tyle".</p>
     <div class="details" id="details">
-      <div class="placeholder">Kliknij dowolną komórkę powyżej, żeby zobaczyć rozbicie i krótki komentarz „dlaczego ta wartość".</div>
+      <div class="placeholder">Kliknij dowolną komórkę powyżej, żeby zobaczyć komentarz.</div>
     </div>
   </section>
 
@@ -302,6 +307,7 @@
       <span class="lbl">0 strach · 50 spokój · 100 mania</span>
     </div>
     <div>Mockup — dane wymyślone.</div>
+    <div class="copyright">© 2026 Marcin Gałęcki</div>
   </footer>
 
 </div>
@@ -354,7 +360,7 @@ const ASSETS = [
   { key:"btc", name:"BTC", sub:"Bitcoin", score:42, delta:-7, ref:"vs wczoraj", mood:"Słabość krótkoterminowa",
     history:[55, 53, 52, 50, 48, 49, 42],
     stats:[
-      { label:"Cena",        value:"$89 420", change:-3.2 },
+      { label:"Cena", value:"$89 420", changes:[{tf:"24h",val:-3.2},{tf:"7d",val:-1.4},{tf:"30d",val:+8.4}] },
       { label:"Wolumen 24h", value:"$32B",    change:+18 },
       { label:"Dominacja",   value:"56,8%",   change:+0.4, unit:"p.p." }
     ],
@@ -368,7 +374,7 @@ const ASSETS = [
   { key:"bnb", name:"BNB", sub:"Binance Coin", score:60, delta:+3, ref:"vs wczoraj", mood:"Stabilna siła",
     history:[55, 56, 57, 56, 58, 58, 60],
     stats:[
-      { label:"Cena",        value:"$612",    change:-2.1 },
+      { label:"Cena", value:"$612", changes:[{tf:"24h",val:-2.1},{tf:"7d",val:+0.8},{tf:"30d",val:+12.1}] },
       { label:"Wolumen 24h", value:"$1,8B",   change:+27 },
       { label:"BNB / BTC",   value:"+1,1%",   change:+1.1, unit:"7d" }
     ],
@@ -448,19 +454,9 @@ function showDetails(item) {
   const panel = document.getElementById("details");
   panel.classList.add("active");
   panel.style.setProperty("--cell-color", scoreColor(item.score));
-  const d = deltaPill(item.delta);
-  const dimsHtml = item.dims.map(dim => `
-    <div class="dim" style="--cell-color:${scoreColor(dim.score)}">
-      <div class="dim-name">${dim.name}</div>
-      <div class="dim-score">${dim.score}</div>
-      <div class="dim-raw">${dim.raw}</div>
-    </div>
-  `).join("");
   panel.innerHTML = `
     <h4>${item.name} <span style="opacity:.55;font-weight:400">· ${item.mood}</span></h4>
-    <div class="sub-h">wynik łączny <strong style="color:var(--text)">${item.score}/100</strong> · <span class="cell-trend ${d.cls}" style="font-size:11px">${d.text}</span> ${item.ref}</div>
     <div class="why">${item.why}</div>
-    <div class="breakdown">${dimsHtml}</div>
   `;
 }
 
@@ -495,7 +491,15 @@ function renderAssetRow(container, item) {
     const stat = document.createElement("div");
     stat.className = "stat";
     let changeHtml = "";
-    if (s.change !== null && s.change !== undefined) {
+    if (Array.isArray(s.changes)) {
+      const rows = s.changes.map(c => {
+        const cls = c.val > 0 ? "up" : c.val < 0 ? "down" : "flat";
+        const sign = c.val > 0 ? "+" : "";
+        const valStr = (typeof c.val === "number") ? String(c.val).replace(".", ",") : c.val;
+        return `<div class="stat-tf-row"><span class="stat-tf">${c.tf}</span><span class="stat-tf-val ${cls}">${sign}${valStr}%</span></div>`;
+      }).join("");
+      changeHtml = `<div class="stat-changes">${rows}</div>`;
+    } else if (s.change !== null && s.change !== undefined) {
       const cls = s.change > 0 ? "up" : s.change < 0 ? "down" : "flat";
       const sign = s.change > 0 ? "+" : "";
       const unit = s.changeUnit || "%";
