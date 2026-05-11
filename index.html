@@ -87,7 +87,7 @@
   .dca-bridge {
     background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
     padding: 22px 24px;
-    display: flex; flex-direction: column; justify-content: center;
+    display: flex; flex-direction: column; justify-content: space-between; gap: 24px;
   }
   .dca-bridge .dca-label {
     font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em;
@@ -97,6 +97,15 @@
   .dca-bridge .dca-value { font-size: 28px; font-weight: 700; line-height: 1; color: var(--pos); letter-spacing: -0.01em; }
   .dca-bridge .dca-value.no { color: var(--neg); }
   .dca-bridge .dca-amount { font-size: 17px; color: var(--text); opacity: 0.85; font-weight: 500; }
+  .dca-history-label {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--muted-2); margin-bottom: 8px;
+  }
+  .dca-strip { display: flex; gap: 2px; height: 14px; margin-bottom: 8px; }
+  .dca-strip .day { flex: 1; border-radius: 1.5px; background: rgba(255,255,255,0.06); }
+  .dca-strip .day.yes { background: var(--pos); }
+  .dca-history-summary { font-size: 11px; color: var(--muted); }
+  .dca-history-summary strong { color: var(--text); font-weight: 600; }
 
   /* Section heading */
   h3.section {
@@ -226,10 +235,17 @@
       </div>
     </div>
     <div class="dca-bridge">
-      <div class="dca-label">Kupić dziś?</div>
-      <div class="dca-answer">
-        <span class="dca-value">TAK</span>
-        <span class="dca-amount">$100</span>
+      <div>
+        <div class="dca-label">Kupić dziś?</div>
+        <div class="dca-answer">
+          <span class="dca-value">TAK</span>
+          <span class="dca-amount">$100</span>
+        </div>
+      </div>
+      <div class="dca-history">
+        <div class="dca-history-label">Ostatnie 30 dni</div>
+        <div id="dca-history-mount"></div>
+        <div class="dca-history-summary" id="dca-history-summary"></div>
       </div>
     </div>
   </section>
@@ -513,6 +529,24 @@ const HERO_HISTORY = [55, 52, 50, 48, 46, 50, 42];
 const heroSparkMount = document.getElementById("hero-spark-mount");
 if (heroSparkMount) {
   heroSparkMount.innerHTML = sparklineSvg(HERO_HISTORY, 260, 44).replace('class="cell-spark"', 'class="hero-spark"');
+}
+
+// DCA history — last 30 days (1 = TAK / kupić, 0 = NIE / skip)
+const DCA_HISTORY = [
+  1,1,1,0,1,1,1,1,0,1,
+  1,1,1,1,0,1,1,1,1,1,
+  0,1,1,1,1,1,1,0,1,1
+];
+const dcaHistoryMount = document.getElementById("dca-history-mount");
+const dcaHistorySummary = document.getElementById("dca-history-summary");
+if (dcaHistoryMount) {
+  const days = DCA_HISTORY.map(v => `<span class="day ${v ? 'yes' : 'no'}"></span>`).join("");
+  dcaHistoryMount.innerHTML = `<div class="dca-strip">${days}</div>`;
+  const yes = DCA_HISTORY.filter(v => v === 1).length;
+  const no = DCA_HISTORY.length - yes;
+  if (dcaHistorySummary) {
+    dcaHistorySummary.innerHTML = `<strong>${yes}</strong> dni TAK · <strong>${no}</strong> NIE`;
+  }
 }
 </script>
 </body>
