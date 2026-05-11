@@ -17,11 +17,16 @@ Filozofia: rynek jest w dużej mierze efektywny i krótkoterminowo emocjonalny, 
 - Operuje na Binance (Binance jako benchmark cenowy — w pełni akceptowalne dla jego trybu)
 - Teza w BNB: to asset oparty na **realnej działającej firmie**, więc jego fundamenty (wolumeny Binance, burny, regulacje) realnie wpływają na cenę. Daje więcej fundamentalnego oparcia niż większość altów, ale ma skoncentrowane ryzyko regulacyjne.
 
-## Stan obecny
+## Stan obecny — etap 1 ukończony (2026-05-11)
 
-- `index.html` — statyczny HTML z dummy data, demonstrujący docelowy UI (deployowany na Vercel)
+- `index.html` — statyczny HTML, **fetchuje `data.json`** przy ładowaniu i renderuje wszystko dynamicznie
+- `fetch.py` — Python skrypt (stdlib only) który ściąga dane z CoinGecko + alternative.me, liczy score'y rules-based, generuje narrative-template, zapisuje `data.json` + dorzuca do `history.json`
+- `data.json` — aktualny snapshot rynku (przepisywany przy każdym refreshu)
+- `history.json` — historia score'ów dla sparklinów (rolling last 7) + 30-dniowy strip DCA
+- `.github/workflows/refresh.yml` — GitHub Actions cron 3× dziennie (06:00/12:00/19:00 UTC = 8:00/14:00/21:00 PT letni). Cron uruchamia fetch.py → commit data.json+history.json → Vercel auto-deploy
 - `colors.md` — pełna paleta kolorów + uzasadnienie + CSS variables
-- **Implementacja jeszcze nie rozpoczęta** — to ostatni krok przed etapem 1 (zbudowanie skryptu Python który zasili HTML prawdziwymi danymi)
+
+**Co dalej**: etap 2 (Claude API zamiast prostych reguł scoringu + bogatsza narracja). Patrz "Plan etapów".
 
 ## Decyzje produktowe — zatwierdzone
 
@@ -115,12 +120,11 @@ Filozofia: rynek jest w dużej mierze efektywny i krótkoterminowo emocjonalny, 
 
 ## Plan etapów
 
-1. **MVP** — minimalne: ceny + wolumeny z Binance API → proste reguły scoring → statyczny HTML. Bez Claude API jeszcze. Daje wizualnie prawdziwy dashboard z prawdziwymi liczbami.
-2. **Sentyment z Claude API** — call do API z surowymi danymi, otrzymujemy score + label + komentarz + narrację. *Wymaga klucza API z console.anthropic.com.*
-3. **On-chain BTC/BNB** — net flows do Binance, funding rates, Coinbase Premium, aktywność BSC. Wszystko w detalach komórek aktywów.
-4. **Newsy i wydarzenia** — RSS + LLM streszcza top 4–6 z 24h.
-5. **Automatyzacja** — `launchd` plist, odpalanie 3× dziennie, ikona w doku (opcjonalnie macOS notification po każdym odświeżeniu).
-6. **Alerty zdarzeniowe** (opcjonalne) — Telegram push przy progowych zmianach (funding, MVRV, duży news regulacyjny).
+1. ✅ **MVP** — ceny + wolumeny z CoinGecko → reguły scoring → dynamiczne dane w HTML. **Ukończone 2026-05-11.** Binance API porzucone bo HTTP 451 na GitHub Actions runners (US data centers); CoinGecko działa globalnie. Automatyzacja przez GitHub Actions cron (nie launchd — bo Mac może być wyłączony) wepchnięta od razu do etapu 1.
+2. **Sentyment z Claude API** — call do API z surowymi danymi, otrzymujemy score + label + komentarz + narrację. Zastępuje obecne rules-based scoringi i template-narrative w `fetch.py`. *Wymaga klucza API z console.anthropic.com (~$5/3mc).*
+3. **On-chain BTC/BNB** — net flows do Binance (mempool.space + hardcoded lista wallet'ów Binance), aktywność BSC przez BSC RPC. Wszystko w detalach komórek aktywów lub jako nowe stat blocki.
+4. **Newsy i wydarzenia** — RSS (CoinDesk + CoinTelegraph) + Binance announcements JSON. LLM streszcza top 4–6 z 24h do sekcji "Wydarzenia".
+5. **Alerty zdarzeniowe** (opcjonalne) — Telegram push przy progowych zmianach (funding, MVRV, duży news regulacyjny).
 
 ## Otwarte — do potwierdzenia z użytkownikiem przed startem etapu 1
 

@@ -171,6 +171,7 @@ def main():
     # alternative.me Fear & Greed
     fng_resp = fetch_json("https://api.alternative.me/fng/?limit=1")
     fng = int(fng_resp["data"][0]["value"])
+    fng_classification = fng_resp["data"][0]["value_classification"]
 
     print(f"  BTC: ${btc_price:.0f} ({btc_24h:+.1f}% 24h)")
     print(f"  BNB: ${bnb_price:.0f} ({bnb_24h:+.1f}% 24h)")
@@ -187,6 +188,47 @@ def main():
     bnb_score = (fng + score_from_pct(bnb_24h) * 2) // 3
 
     dca = "TAK" if score_24h < 80 else "NIE"
+
+    # Narrative — simple template (Claude API w etapie 2)
+    fng_pl_map = {
+        "Extreme Fear": "ekstremalny strach",
+        "Fear": "strach",
+        "Neutral": "rynek neutralny",
+        "Greed": "chciwość",
+        "Extreme Greed": "ekstremalna chciwość",
+    }
+    fng_pl = fng_pl_map.get(fng_classification, fng_classification.lower())
+    months_since_halving = int((datetime.now() - HALVING_DATE).days / 30.4)
+    if months_since_halving < 12:
+        cycle_state = "cykl wciąż w fazie wzrostu"
+    elif months_since_halving < 18:
+        cycle_state = "cykl w dojrzałej fazie wzrostu"
+    elif months_since_halving < 24:
+        cycle_state = "cykl bliski historycznego szczytu"
+    else:
+        cycle_state = "cykl po szczycie historycznym"
+
+    def fmt_pct(p):
+        sign = "+" if p >= 0 else ""
+        return f"{sign}{p:.1f}%".replace(".", ",")
+
+    def months_pl(n):
+        if n == 1:
+            return "miesiąc"
+        last_two = n % 100
+        if 12 <= last_two <= 14:
+            return "miesięcy"
+        last_one = n % 10
+        if 2 <= last_one <= 4:
+            return "miesiące"
+        return "miesięcy"
+
+    narrative = (
+        f'<span class="coin-btc">BTC</span> <strong>{fmt_pct(btc_24h)}</strong>, '
+        f'<span class="coin-bnb">BNB</span> <strong>{fmt_pct(bnb_24h)}</strong> w ostatnich 24h. '
+        f'Fear &amp; Greed: <strong>{fng}</strong> ({fng_pl}). '
+        f'{months_since_halving} {months_pl(months_since_halving)} po halvingu — {cycle_state}.'
+    )
 
     history = load_history()
     hero_hist = push_score(history, "hero", score_24h)
@@ -205,6 +247,7 @@ def main():
     data = {
         "fetched_at": datetime.now(timezone.utc).isoformat(),
         "header_label": header_label,
+        "narrative": narrative,
         "hero": {
             "score": score_24h,
             "delta": delta(hero_hist),

@@ -128,7 +128,6 @@
   .stat {
     background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
     padding: 14px 16px;
-    display: flex; flex-direction: column; justify-content: space-between;
   }
   .stat .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 12px; }
   .stat .stat-value { font-size: 22px; font-weight: 700; color: var(--text); line-height: 1; letter-spacing: -0.01em; }
@@ -231,7 +230,7 @@
   <section class="hero-narrative">
     <div>
       <div class="label">Co się dzieje</div>
-      <p><span class="coin-btc">BTC</span> <strong>−3,2%</strong> po jastrzębich sygnałach z Fed, ale wolumen sprzedażowy umiarkowany — to korekta, nie kapitulacja. Cykl dalej konstruktywny, a <span class="coin-bnb">BNB</span> trzyma się lepiej od rynku: Binance kwartalnie zarobił rekordowo, burn za ~23 dni.</p>
+      <p id="narrative-text"></p>
     </div>
   </section>
 
@@ -391,6 +390,9 @@ function renderAssetRow(container, item) {
 function render(data) {
   // Header label + hero
   document.getElementById("hero-label").textContent = data.header_label;
+  if (data.narrative) {
+    document.getElementById("narrative-text").innerHTML = data.narrative;
+  }
   const heroCard = document.getElementById("hero-card");
   heroCard.style.setProperty("--cell-color", scoreColor(data.hero.score));
   document.getElementById("hero-score").textContent = data.hero.score;
