@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <title>CryptoBeacon — monogram</title>
+  <desc>CB monogram for favicons and app icons.</desc>
+  <rect width="256" height="256" fill="#000000"></rect>
+  <text x="128" y="132" text-anchor="middle" dominant-baseline="central" font-family="Helvetica Neue, Helvetica, Inter, Arial, sans-serif" font-weight="500" font-size="154" letter-spacing="-6" fill="#ffffff" style="font-feature-settings: &#39;liga&#39; 0, &#39;calt&#39; 0;">CB</text>
+</svg>

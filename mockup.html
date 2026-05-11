@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<title>CryptoBeacon — BTC / BNB</title>
+<link rel="icon" type="image/svg+xml" href="logo/cryptobeacon-monogram.svg">
+<style>
+  :root {
+    --bg:        #0d1117;
+    --bg-soft:   #11161f;
+    --panel:     #161c27;
+    --panel-2:   #1c2330;
+    --border:    #232b3a;
+    --text:      #e6e9ef;
+    --muted:     #8a93a6;
+    --muted-2:   #6b7385;
+    --accent:    #c4a878;
+
+    /* Palette: red → orange (warning) → GRAY (neutral / spokój) → lime → green
+       Brightness tuned for readable colored text on dark bg. */
+    --c-0:   #dc2626;   /* red — krew */
+    --c-15:  #ef4444;   /* lighter red — wyprzedaż */
+    --c-30:  #f97316;   /* orange — słabość / niepokój */
+    --c-45:  #9ca3af;   /* gray — spokój */
+    --c-55:  #84cc16;   /* lime — wzmocnienie */
+    --c-65:  #4ade80;   /* light green — siła */
+    --c-75:  #22c55e;   /* green — hossa */
+    --c-85:  #16a34a;   /* deeper green */
+    --c-100: #15803d;   /* deepest green — euforia */
+    --pos: #22c55e;
+    --neg: #ef4444;
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    background-image:
+      radial-gradient(1200px 600px at 20% -10%, rgba(196,168,120,0.04), transparent 60%),
+      radial-gradient(900px 500px at 110% 10%, rgba(63,93,98,0.06), transparent 60%);
+    color: var(--text);
+    font-family: "Helvetica Neue", "Helvetica", "Arial", -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 14px; line-height: 1.55;
+    min-height: 100vh;
+  }
+
+  .wrap { max-width: 980px; margin: 0 auto; padding: 36px 24px 80px; }
+
+  header.top { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 32px; flex-wrap: wrap; }
+  header.top .brand { display: flex; align-items: center; color: #ffffff; }
+  header.top .brand .brand-logo { height: 26px; width: auto; display: block; }
+  header.top h1 { font-size: 24px; margin: 8px 0 4px; font-weight: 600; letter-spacing: -0.015em; }
+  header.top .sub { color: var(--muted); font-size: 12px; }
+  header.top .meta-right { color: var(--muted); font-size: 12px; text-align: right; }
+  header.top .meta-right strong { color: var(--text); font-weight: 500; }
+
+  /* HERO — main read, cell-style scaled up */
+  .hero {
+    display: grid; grid-template-columns: minmax(220px, 260px) 1fr; gap: 24px;
+    margin-bottom: 32px; align-items: stretch;
+  }
+  .hero-card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+    padding: 22px 24px;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .hero-card .hero-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 14px; }
+  .hero-card .hero-score-row { display: flex; align-items: baseline; gap: 20px; }
+  .hero-card .cell-trend { font-size: 26px; font-weight: 700; color: var(--cell-color); }
+  .hero-card .hero-score { font-size: 68px; font-weight: 700; line-height: 0.95; color: var(--cell-color); letter-spacing: -0.02em; }
+  .hero-card .hero-spark { display: block; width: 100%; height: 44px; margin-top: 14px; opacity: 0.9; }
+  .hero-card .hero-spark polyline { stroke: var(--cell-color); stroke-width: 2; fill: none; }
+  .hero-card .hero-spark .dot { fill: var(--cell-color); }
+  .hero-card .hero-mood { font-size: 15px; font-weight: 600; color: var(--text); margin-top: 18px; }
+  .hero-card .hero-ref { font-size: 11px; color: var(--muted-2); margin-top: 4px; }
+  .hero-narrative {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+    padding: 22px 24px; display: flex; align-items: center;
+  }
+  .hero-narrative .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted); margin-bottom: 8px; }
+  .hero-narrative h2 { margin: 0 0 10px; font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }
+  .hero-narrative p { margin: 0; font-size: 14.5px; color: #c8cdd9; line-height: 1.6; }
+  .hero-narrative p strong { color: #fff; font-weight: 600; }
+
+  /* DCA bridge — same card style as "Co się dzieje" */
+  .dca-bridge {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+    padding: 22px 24px; margin-bottom: 32px;
+  }
+  .dca-bridge .dca-label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em;
+    color: var(--muted); margin-bottom: 8px;
+  }
+  .dca-bridge .dca-answer { display: flex; gap: 14px; align-items: baseline; }
+  .dca-bridge .dca-value { font-size: 28px; font-weight: 700; line-height: 1; color: var(--pos); letter-spacing: -0.01em; }
+  .dca-bridge .dca-value.no { color: var(--neg); }
+  .dca-bridge .dca-amount { font-size: 17px; color: var(--text); opacity: 0.85; font-weight: 500; }
+
+  /* Section heading */
+  h3.section {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em;
+    color: var(--muted); font-weight: 600; margin: 0 0 4px;
+  }
+  .section-sub {
+    font-size: 12.5px; color: var(--muted-2);
+    margin: 0 0 14px; max-width: 72ch; line-height: 1.5;
+  }
+  section.block { margin-bottom: 28px; }
+
+  /* Time strip / asset strip — one score per cell */
+  .strip { display: grid; gap: 8px; }
+  .strip.time { grid-template-columns: repeat(5, 1fr); }
+
+  /* Asset grid — each asset is a row: score cell + 3 stat blocks */
+  .assets-grid { display: grid; gap: 10px; }
+  .asset-row { display: grid; grid-template-columns: 1.15fr 1fr 1fr 1fr; gap: 8px; }
+  .stat {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 16px;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .stat .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 12px; }
+  .stat .stat-value { font-size: 22px; font-weight: 700; color: var(--text); line-height: 1; letter-spacing: -0.01em; }
+  .stat .stat-change { font-size: 12px; font-weight: 600; margin-top: 6px; }
+  .stat .stat-change.up { color: #4ade80; }
+  .stat .stat-change.down { color: #f87171; }
+  .stat .stat-change.flat { color: var(--muted-2); }
+  .stat .stat-sub { font-size: 11px; color: var(--muted-2); margin-top: 6px; }
+
+  .cell {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px 14px; cursor: pointer; user-select: none;
+    transition: transform 0.1s ease, border-color 0.15s ease;
+  }
+  .cell:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.14); }
+  .cell .cell-name { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 8px; }
+  .cell .cell-score-row { display: flex; align-items: baseline; gap: 12px; margin-bottom: 6px; }
+  .cell .cell-trend { font-size: 16px; font-weight: 700; line-height: 1; color: var(--cell-color); }
+  .cell .cell-score { font-size: 28px; font-weight: 700; line-height: 1; color: var(--cell-color); }
+  .cell .cell-spark { display: block; width: 100%; height: 20px; margin-bottom: 8px; opacity: 0.85; }
+  .cell .cell-spark polyline { stroke: var(--cell-color); stroke-width: 1.5; fill: none; }
+  .cell .cell-spark .dot { fill: var(--cell-color); }
+  .cell .cell-mood { font-size: 12px; color: var(--text); opacity: 0.9; }
+  .cell.selected { border-color: var(--accent); }
+
+  /* Details panel */
+  .details {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+    padding: 22px 24px; min-height: 70px;
+    transition: border-color 0.2s ease;
+  }
+  .details.active { border-color: rgba(196,168,120,0.4); }
+  .details .placeholder { color: var(--muted-2); font-size: 13px; font-style: italic; }
+  .details h4 { margin: 0 0 4px; font-size: 16px; font-weight: 600; }
+  .details .sub-h { color: var(--muted); font-size: 12px; margin-bottom: 14px; }
+  .details .why { font-size: 13.5px; color: #c8cdd9; margin-bottom: 18px; line-height: 1.6; }
+  .details .breakdown { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
+  .details .dim {
+    background: var(--bg-soft); border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px 14px;
+  }
+  .details .dim .dim-name { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 6px; }
+  .details .dim .dim-score { font-size: 20px; font-weight: 700; line-height: 1; color: var(--cell-color); }
+  .details .dim .dim-raw { font-size: 11px; color: var(--muted); font-family: ui-monospace, "SF Mono", Menlo, monospace; margin-top: 6px; }
+
+  /* Events */
+  .events { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 6px 22px; }
+  .events ul { margin: 0; padding: 0; list-style: none; }
+  .events li { padding: 14px 0; border-bottom: 1px solid var(--border); display: flex; gap: 14px; font-size: 13.5px; align-items: flex-start; }
+  .events li:last-child { border-bottom: none; }
+  .events .tags { display: flex; gap: 4px; flex-shrink: 0; }
+  .events .tag { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; padding: 4px 9px; border-radius: 4px; font-weight: 700; white-space: nowrap; }
+  .tag.btc { background: rgba(247,147,26,0.15); color: #f7931a; }
+  .tag.bnb { background: rgba(240,185,11,0.15); color: #f0b90b; }
+  .events .when { color: var(--muted-2); font-size: 11px; min-width: 64px; padding-top: 2px; }
+  .events .ev-text { flex: 1; color: #d3d7e0; line-height: 1.55; }
+
+  footer {
+    margin-top: 36px; padding-top: 22px; border-top: 1px solid var(--border);
+    color: var(--muted-2); font-size: 11px; display: flex; flex-wrap: wrap; gap: 16px;
+    justify-content: space-between; align-items: center;
+  }
+  .legend { display: flex; gap: 4px; align-items: center; }
+  .legend .swatch { display: inline-block; width: 26px; height: 12px; border-radius: 2px; }
+  .legend .lbl { color: var(--muted-2); font-size: 10px; margin: 0 4px; }
+
+  @media (max-width: 720px) {
+    .wrap { padding: 20px 16px; }
+    .hero { grid-template-columns: 1fr; text-align: left; padding: 22px; }
+    .hero .dial { width: 100px; height: 100px; }
+    .hero .dial .score { font-size: 28px; }
+    .hero h2 { font-size: 18px; }
+    .strip.time { grid-template-columns: repeat(2, 1fr); }
+    .strip.assets { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand">
+      <svg class="brand-logo" viewBox="0 0 720 120" xmlns="http://www.w3.org/2000/svg" aria-label="CryptoBeacon">
+        <text x="360" y="60" text-anchor="middle" dominant-baseline="central" font-family="Helvetica Neue, Helvetica, Inter, Arial, sans-serif" font-weight="500" font-size="96" letter-spacing="-1.44" fill="currentColor" style="font-feature-settings: 'liga' 0, 'calt' 0;">CryptoBeacon</text>
+      </svg>
+    </div>
+    <div class="meta-right">
+      <div class="sub">poniedziałek, 11 maja 2026</div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-card" style="--cell-color: var(--c-30);">
+      <div>
+        <div class="hero-label">Dziś · 24h</div>
+        <div class="hero-score-row">
+          <div class="hero-score">42</div>
+          <span class="cell-trend down">↓ 8</span>
+        </div>
+        <div id="hero-spark-mount"></div>
+      </div>
+      <div>
+        <div class="hero-mood">Lekkie osłabienie</div>
+      </div>
+    </div>
+    <div class="hero-narrative">
+      <div>
+        <div class="label">Co się dzieje</div>
+        <p>BTC <strong>−3,2%</strong> po jastrzębich sygnałach z Fed, ale wolumen sprzedażowy umiarkowany — to korekta, nie kapitulacja. Cykl dalej konstruktywny, a <strong>BNB</strong> trzyma się lepiej od rynku: Binance kwartalnie zarobił rekordowo, burn za ~23 dni.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="dca-bridge">
+    <div class="dca-label">Kupić dziś?</div>
+    <div class="dca-answer">
+      <span class="dca-value">TAK</span>
+      <span class="dca-amount">$100</span>
+    </div>
+  </section>
+
+  <section class="block">
+    <h3 class="section">Rynek w czasie</h3>
+    <p class="section-sub">Jak nastrój rynku zmienia się w różnych horyzontach — od ostatnich 24h po cały cykl od halvingu. Pomaga rozróżnić chwilową korektę od zmiany trendu.</p>
+    <div class="strip time" id="time-strip"></div>
+  </section>
+
+  <section class="block">
+    <h3 class="section">Aktywa</h3>
+    <p class="section-sub">BTC i BNB osobno — sentyment, surowa cena, wolumen i pozycja względem rynku. Tu zobaczysz, kiedy BNB pokazuje siłę niezależną od BTC.</p>
+    <div class="assets-grid" id="asset-grid"></div>
+  </section>
+
+  <section class="block">
+    <h3 class="section">Szczegóły</h3>
+    <p class="section-sub">Rozwinięcie wybranej komórki: z czego składa się wynik, jakie surowe dane go napędzają i krótki komentarz „dlaczego tyle".</p>
+    <div class="details" id="details">
+      <div class="placeholder">Kliknij dowolną komórkę powyżej, żeby zobaczyć rozbicie i krótki komentarz „dlaczego ta wartość".</div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h3 class="section">Wydarzenia · ostatnie 24h</h3>
+    <p class="section-sub">Co działo się wokół Binance, regulacji krypto i makroekonomii — żebyś wiedział, jakie zdarzenia mogły wpłynąć na wyniki powyżej.</p>
+    <div class="events">
+      <ul>
+        <li><span class="when">3h temu</span><span class="tags"><span class="tag btc">BTC</span><span class="tag bnb">BNB</span></span><div class="ev-text">Fed sygnalizuje brak obniżek stóp do końca Q3 — krzywa rentowności płaska, dolar mocniejszy o 0,6%. Negatywne dla całego rynku krypto.</div></li>
+        <li><span class="when">7h temu</span><span class="tags"><span class="tag bnb">BNB</span></span><div class="ev-text">Binance raport kwartalny: wolumen +18% q/q, przychody $1,2B. Następny BNB burn szacowany na ~$840M za ~23 dni.</div></li>
+        <li><span class="when">11h temu</span><span class="tags"><span class="tag btc">BTC</span><span class="tag bnb">BNB</span></span><div class="ev-text">SEC odracza decyzję o ETF na SOL o kolejne 60 dni — neutralne dla BTC/BNB, lekko negatywne dla altów.</div></li>
+        <li><span class="when">18h temu</span><span class="tags"><span class="tag btc">BTC</span></span><div class="ev-text">Wpłaty BTC na giełdy +14% vs 7-dniowa średnia. 4 duże transakcje &gt;1000 BTC w stronę Binance — możliwa presja sprzedażowa.</div></li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    <div class="legend">
+      Skala 0–100:
+      <span class="swatch" style="background:var(--c-0)"></span>
+      <span class="swatch" style="background:var(--c-15)"></span>
+      <span class="swatch" style="background:var(--c-30)"></span>
+      <span class="swatch" style="background:var(--c-45)"></span>
+      <span class="swatch" style="background:var(--c-55)"></span>
+      <span class="swatch" style="background:var(--c-65)"></span>
+      <span class="swatch" style="background:var(--c-75)"></span>
+      <span class="swatch" style="background:var(--c-85)"></span>
+      <span class="swatch" style="background:var(--c-100)"></span>
+      <span class="lbl">0 strach · 50 spokój · 100 mania</span>
+    </div>
+    <div>Mockup — dane wymyślone.</div>
+  </footer>
+
+</div>
+
+<script>
+const TIME = [
+  { key:"dzis", name:"Dziś", sub:"24h", score:34, delta:-9, ref:"vs wczoraj", mood:"Słabość",
+    history:[48, 50, 47, 43, 45, 43, 34],
+    why:"Korekta po teście $93k. Wolumen rośnie, ale rozkład 60/40 sprzedaż/kupno — kontrolowana wyprzedaż, nie panika. Krótki horyzont, słabszy niż reszta interwałów.",
+    dims:[
+      { name:"Cena",     score:34, raw:"BTC −3,2%, BNB −2,1%" },
+      { name:"Wolumen",  score:58, raw:"+22% vs średnia 7d" }
+    ]
+  },
+  { key:"tydzien", name:"Tydzień", sub:"7d", score:52, delta:-3, ref:"vs tydzień temu", mood:"Spokój",
+    history:[58, 56, 55, 54, 53, 54, 52],
+    why:"Konsolidacja po kwietniowym rajdzie. BNB nieznacznie mocniejsze od BTC. Nic dramatycznego w jedną ani w drugą stronę.",
+    dims:[
+      { name:"Cena",     score:48, raw:"BTC −1,4%, BNB +0,8%" },
+      { name:"Wolumen",  score:62, raw:"+9% vs średnia 30d" }
+    ]
+  },
+  { key:"miesiac", name:"Miesiąc", sub:"30d", score:67, delta:+5, ref:"vs miesiąc temu", mood:"Siła",
+    history:[60, 61, 63, 64, 65, 66, 67],
+    why:"Wyraźny trend wzrostowy podtrzymany. BNB outperform vs BTC. ETF-y BTC w 22/30 dni z napływem netto.",
+    dims:[
+      { name:"Cena",     score:65, raw:"BTC +8,4%, BNB +12,1%" },
+      { name:"Wolumen",  score:70, raw:"+24% vs poprz. miesiąc" }
+    ]
+  },
+  { key:"kwartal", name:"Kwartał", sub:"90d", score:74, delta:+8, ref:"vs kwartał temu", mood:"Hossa",
+    history:[62, 65, 68, 70, 71, 73, 74],
+    why:"Wyraźna faza wzrostowa po I/Q akumulacji. Rynek się rozkręca, kapitał wraca, instytucje aktywne.",
+    dims:[
+      { name:"Cena",     score:72, raw:"BTC +22%, BNB +31%" },
+      { name:"Wolumen",  score:81, raw:"+47% vs poprz. kwartał" }
+    ]
+  },
+  { key:"cykl", name:"Cykl", sub:"od halvingu", score:64, delta:+2, ref:"vs miesiąc temu", mood:"Hossa wczesna",
+    history:[58, 60, 61, 62, 63, 63, 64],
+    why:"13 miesięcy po halvingu — historycznie szczyt cyklu wypada między 14. a 20. miesiącem. Daleko od ATH ($3,2T z grudnia 2024), ale trend nienaruszony.",
+    dims:[
+      { name:"Cena",     score:64, raw:"BTC +112% od halvingu" },
+      { name:"Wolumen",  score:71, raw:"powyżej średniej cyklu" }
+    ]
+  }
+];
+
+const ASSETS = [
+  { key:"btc", name:"BTC", sub:"Bitcoin", score:42, delta:-7, ref:"vs wczoraj", mood:"Słabość krótkoterminowa",
+    history:[55, 53, 52, 50, 48, 49, 42],
+    stats:[
+      { label:"Cena",        value:"$89 420", change:-3.2 },
+      { label:"Wolumen 24h", value:"$32B",    change:+18 },
+      { label:"Dominacja",   value:"56,8%",   change:+0.4, unit:"p.p." }
+    ],
+    why:"Korekta po teście $93k. Wsparcie w okolicy $86k (200-dniowa MA). Wolumen sprzedażowy umiarkowany — większy rynek dalej kupuje dipy.",
+    dims:[
+      { name:"Cena",     score:42, raw:"$89 420 (−3,2% 24h)" },
+      { name:"Wolumen",  score:58, raw:"$32B (+18% vs 7d avg)" },
+      { name:"Siła vs rynek", score:55, raw:"BTC dominacja 56,8% (+0,4 p.p.)" }
+    ]
+  },
+  { key:"bnb", name:"BNB", sub:"Binance Coin", score:60, delta:+3, ref:"vs wczoraj", mood:"Stabilna siła",
+    history:[55, 56, 57, 56, 58, 58, 60],
+    stats:[
+      { label:"Cena",        value:"$612",    change:-2.1 },
+      { label:"Wolumen 24h", value:"$1,8B",   change:+27 },
+      { label:"BNB / BTC",   value:"+1,1%",   change:+1.1, unit:"7d" }
+    ],
+    why:"Korekta płytsza niż BTC — fundament Binance trzyma cenę. Wolumen powyżej średniej, brak panicznej wyprzedaży. Burn za ~23 dni szacowany na ~$840M.",
+    dims:[
+      { name:"Cena",     score:56, raw:"$612 (−2,1% 24h)" },
+      { name:"Wolumen",  score:64, raw:"$1,8B (+27% vs 7d avg)" },
+      { name:"Siła vs BTC", score:70, raw:"BNB/BTC +1,1% 7d" }
+    ]
+  }
+];
+
+function scoreColor(s){
+  if (s<15)  return "var(--c-0)";
+  if (s<30)  return "var(--c-15)";
+  if (s<45)  return "var(--c-30)";
+  if (s<55)  return "var(--c-45)";
+  if (s<65)  return "var(--c-55)";
+  if (s<75)  return "var(--c-65)";
+  if (s<85)  return "var(--c-75)";
+  if (s<95)  return "var(--c-85)";
+  return "var(--c-100)";
+}
+
+function deltaPill(delta) {
+  if (delta === 0 || delta === null || delta === undefined) {
+    return { cls:"flat", text:"→ bez zmian" };
+  }
+  if (delta > 0) return { cls:"up",   text:`↑ ${delta}` };
+  return                 { cls:"down", text:`↓ ${Math.abs(delta)}` };
+}
+
+function sparklineSvg(values, w=100, h=22) {
+  if (!values || values.length < 2) return "";
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = (max - min) || 1;
+  const pad = 2;
+  const usableH = h - pad * 2;
+  const points = values.map((v, i) => {
+    const x = (i / (values.length - 1)) * w;
+    const y = pad + (1 - (v - min) / range) * usableH;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(" ");
+  const lastX = w;
+  const lastY = pad + (1 - (values[values.length-1] - min) / range) * usableH;
+  return `<svg class="cell-spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+    <polyline points="${points}" />
+    <circle class="dot" cx="${lastX.toFixed(1)}" cy="${lastY.toFixed(1)}" r="1.8" />
+  </svg>`;
+}
+
+function renderCell(container, item) {
+  const div = document.createElement("div");
+  div.className = "cell";
+  div.dataset.key = item.key;
+  div.style.setProperty("--cell-color", scoreColor(item.score));
+  const d = deltaPill(item.delta);
+  div.innerHTML = `
+    <div class="cell-name">${item.name} ${item.sub ? `<span style="opacity:.6">· ${item.sub}</span>` : ""}</div>
+    <div class="cell-score-row">
+      <div class="cell-score">${item.score}</div>
+      <span class="cell-trend ${d.cls}">${d.text}</span>
+    </div>
+    ${sparklineSvg(item.history)}
+    <div class="cell-mood">${item.mood}</div>
+  `;
+  div.addEventListener("click", () => {
+    document.querySelectorAll(".cell.selected").forEach(c => c.classList.remove("selected"));
+    div.classList.add("selected");
+    showDetails(item);
+  });
+  container.appendChild(div);
+}
+
+function showDetails(item) {
+  const panel = document.getElementById("details");
+  panel.classList.add("active");
+  panel.style.setProperty("--cell-color", scoreColor(item.score));
+  const d = deltaPill(item.delta);
+  const dimsHtml = item.dims.map(dim => `
+    <div class="dim" style="--cell-color:${scoreColor(dim.score)}">
+      <div class="dim-name">${dim.name}</div>
+      <div class="dim-score">${dim.score}</div>
+      <div class="dim-raw">${dim.raw}</div>
+    </div>
+  `).join("");
+  panel.innerHTML = `
+    <h4>${item.name} <span style="opacity:.55;font-weight:400">· ${item.mood}</span></h4>
+    <div class="sub-h">wynik łączny <strong style="color:var(--text)">${item.score}/100</strong> · <span class="cell-trend ${d.cls}" style="font-size:11px">${d.text}</span> ${item.ref}</div>
+    <div class="why">${item.why}</div>
+    <div class="breakdown">${dimsHtml}</div>
+  `;
+}
+
+function renderAssetRow(container, item) {
+  const row = document.createElement("div");
+  row.className = "asset-row";
+
+  // Score cell (same as time cell)
+  const cell = document.createElement("div");
+  cell.className = "cell";
+  cell.dataset.key = item.key;
+  cell.style.setProperty("--cell-color", scoreColor(item.score));
+  const d = deltaPill(item.delta);
+  cell.innerHTML = `
+    <div class="cell-name">${item.name} ${item.sub ? `<span style="opacity:.6">· ${item.sub}</span>` : ""}</div>
+    <div class="cell-score-row">
+      <div class="cell-score">${item.score}</div>
+      <span class="cell-trend ${d.cls}">${d.text}</span>
+    </div>
+    ${sparklineSvg(item.history)}
+    <div class="cell-mood">${item.mood}</div>
+  `;
+  cell.addEventListener("click", () => {
+    document.querySelectorAll(".cell.selected").forEach(c => c.classList.remove("selected"));
+    cell.classList.add("selected");
+    showDetails(item);
+  });
+  row.appendChild(cell);
+
+  // Stat blocks
+  item.stats.forEach(s => {
+    const stat = document.createElement("div");
+    stat.className = "stat";
+    let changeHtml = "";
+    if (s.change !== null && s.change !== undefined) {
+      const cls = s.change > 0 ? "up" : s.change < 0 ? "down" : "flat";
+      const sign = s.change > 0 ? "+" : "";
+      const unit = s.changeUnit || "%";
+      const valStr = (typeof s.change === "number") ? String(s.change).replace(".", ",") : s.change;
+      changeHtml = `<div class="stat-change ${cls}">${sign}${valStr} ${unit}</div>`;
+    }
+    const subHtml = s.sub ? `<div class="stat-sub">${s.sub}</div>` : "";
+    stat.innerHTML = `
+      <div class="stat-label">${s.label}</div>
+      <div>
+        <div class="stat-value">${s.value}</div>
+        ${changeHtml}${subHtml}
+      </div>
+    `;
+    row.appendChild(stat);
+  });
+
+  container.appendChild(row);
+}
+
+const timeStrip = document.getElementById("time-strip");
+TIME.forEach(t => renderCell(timeStrip, t));
+const assetGrid = document.getElementById("asset-grid");
+ASSETS.forEach(a => renderAssetRow(assetGrid, a));
+
+// Hero sparkline — recent score history (illustrative)
+const HERO_HISTORY = [55, 52, 50, 48, 46, 50, 42];
+const heroSparkMount = document.getElementById("hero-spark-mount");
+if (heroSparkMount) {
+  heroSparkMount.innerHTML = sparklineSvg(HERO_HISTORY, 260, 44).replace('class="cell-spark"', 'class="hero-spark"');
+}
+</script>
+</body>
+</html>
