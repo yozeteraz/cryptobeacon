@@ -102,7 +102,8 @@
   .asset-card .score-pane .asset-price-change.flat { color: var(--muted-2); }
 
   .asset-card .dca-pane .dca-two-col {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px;
+    display: grid; grid-template-columns: 1fr 0.7fr; gap: 14px; margin-bottom: 18px;
+    align-items: end;
   }
   .asset-card .dca-pane .dca-col { display: flex; flex-direction: column; gap: 6px; }
   .asset-card .dca-pane .dca-col-label {
@@ -110,6 +111,8 @@
   }
   .asset-card .dca-pane .dca-value { font-size: 36px; font-weight: 700; line-height: 1; color: var(--pos); letter-spacing: -0.01em; }
   .asset-card .dca-pane .dca-value.no { color: var(--neg); }
+  .asset-card .dca-pane .dca-col:nth-child(2) .dca-value { font-size: 25px; }
+  .asset-card .dca-pane .dca-col:nth-child(2) .dca-col-label { font-size: 9px; }
   .asset-card .dca-pane .dca-history-label {
     font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em;
     color: var(--muted-2); margin-top: auto; margin-bottom: 8px;
@@ -461,13 +464,15 @@
     .asset-card .score-pane .asset-price { font-size: 12px; }
     .asset-card .score-pane .asset-price-change { font-size: 10px; }
 
-    /* DCA pane: stack DZIŚ / ZA 7 DNI vertically */
+    /* DCA pane: side-by-side, "Za 7 dni" 30% mniejsze (1fr : 0.7fr) */
     .asset-card .dca-pane .dca-two-col {
-      grid-template-columns: 1fr;
+      grid-template-columns: 1fr 0.7fr;
       gap: 8px; margin-bottom: 10px;
     }
     .asset-card .dca-pane .dca-value { font-size: 22px; }
+    .asset-card .dca-pane .dca-col:nth-child(2) .dca-value { font-size: 15px; }
     .asset-card .dca-pane .dca-col-label { font-size: 9px; }
+    .asset-card .dca-pane .dca-col:nth-child(2) .dca-col-label { font-size: 8px; }
     .asset-card .dca-pane .dca-strip { height: 8px; margin-bottom: 6px; }
     .asset-card .dca-pane .dca-history-label { font-size: 9px; margin-bottom: 4px; }
     .asset-card .dca-pane .dca-history-summary { font-size: 10px; }
