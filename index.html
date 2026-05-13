@@ -84,11 +84,13 @@
   .asset-card .score-pane .forecast-badge {
     font-size: 11px; color: var(--muted); margin-top: 6px;
     display: flex; align-items: center; gap: 6px;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.02em; flex-wrap: wrap;
   }
   .asset-card .score-pane .forecast-badge .arrow { font-size: 13px; font-weight: 700; color: var(--cell-color); }
   .asset-card .score-pane .forecast-badge .range { color: var(--text); font-weight: 500; }
   .asset-card .score-pane .forecast-badge .conf { color: var(--muted-2); }
+  .asset-card .score-pane .forecast-badge .badge-prefix,
+  .asset-card .score-pane .forecast-badge .badge-sep { color: var(--muted-2); }
   .asset-card .score-pane .asset-price-row {
     display: flex; align-items: baseline; gap: 12px;
     margin-top: auto; padding-top: 14px;
@@ -431,20 +433,58 @@
   .sheet-close:hover { background: var(--panel); color: var(--text); }
 
   @media (max-width: 600px) {
-    .wrap { padding: 20px 16px 60px; }
-    .asset-card { grid-template-columns: 1fr; }
-    .asset-card .score-pane { border-right: none; border-bottom: 1px solid var(--border); }
-    .asset-card .pane { padding: 18px 20px; }
-    .asset-card .score-pane .asset-score { font-size: 52px; }
-    .asset-card .dca-pane .dca-value { font-size: 30px; }
-    .detail-hero { padding: 18px 20px; }
-    .detail-hero .hero-score { font-size: 56px; }
+    .wrap { padding: 16px 12px 60px; }
+    .widgets { gap: 12px; margin-bottom: 18px; }
+
+    /* Compact widget: keep side-by-side, tighten everything */
+    .asset-card { grid-template-columns: 1fr 1fr; }
+    .asset-card .score-pane { border-right: 1px solid var(--border); border-bottom: none; }
+    .asset-card .pane { padding: 14px 14px; }
+    .asset-card .pane-head { font-size: 10px; margin-bottom: 10px; letter-spacing: 0.1em; }
+
+    /* Score pane compact */
+    .asset-card .score-pane .asset-score { font-size: 42px; }
+    .asset-card .score-pane .asset-trend { font-size: 16px; }
+    .asset-card .score-pane .asset-spark { height: 26px; margin-top: 8px; }
+    .asset-card .score-pane .asset-mood { font-size: 13px; margin-top: 10px; }
+    .asset-card .score-pane .forecast-badge {
+      font-size: 10px; margin-top: 4px; gap: 4px;
+    }
+    .asset-card .score-pane .forecast-badge .arrow { font-size: 12px; }
+    .asset-card .score-pane .forecast-badge .badge-prefix,
+    .asset-card .score-pane .forecast-badge .badge-sep,
+    .asset-card .score-pane .forecast-badge .conf { display: none; }
+    .asset-card .score-pane .asset-price-row { padding-top: 10px; }
+    .asset-card .score-pane .asset-price { font-size: 13px; }
+    .asset-card .score-pane .asset-price-change { font-size: 10px; }
+
+    /* DCA pane: stack DZIŚ / ZA 7 DNI vertically (tighter for narrow column) */
+    .asset-card .dca-pane .dca-two-col {
+      grid-template-columns: 1fr;
+      gap: 10px; margin-bottom: 12px;
+    }
+    .asset-card .dca-pane .dca-value { font-size: 24px; }
+    .asset-card .dca-pane .dca-col-label { font-size: 9px; }
+    .asset-card .dca-pane .dca-strip { height: 10px; }
+    .asset-card .dca-pane .dca-history-summary { font-size: 10px; }
+
+    /* Detail page mobile */
+    .detail-hero { padding: 14px 16px; }
+    .detail-hero .hero-score { font-size: 52px; }
     .strip.time { grid-template-columns: repeat(2, 1fr); }
     .stats-grid { grid-template-columns: 1fr; }
-    .detail-panel { padding-right: 8px; }
-    .detail-panel:last-child { padding-left: 8px; }
+    .detail-panel { padding-right: 6px; }
+    .detail-panel:last-child { padding-left: 6px; }
+
     .nav-switcher { bottom: 12px; right: 12px; }
     body.nav-mode-b #detail-view { padding-bottom: 86px; }
+  }
+
+  /* Very narrow phones (<380px): fallback to stack */
+  @media (max-width: 380px) {
+    .asset-card { grid-template-columns: 1fr; }
+    .asset-card .score-pane { border-right: none; border-bottom: 1px solid var(--border); }
+    .asset-card .dca-pane .dca-two-col { grid-template-columns: 1fr 1fr; }
   }
 </style>
 </head>
@@ -630,9 +670,9 @@ function forecastBadgeHtml(forecast) {
   return `
     <div class="forecast-badge" style="--cell-color:${midColor}">
       <span class="arrow">${forecastArrow(forecast.direction)}</span>
-      <span>za 7d:</span>
+      <span class="badge-prefix">za 7d:</span>
       <span class="range">${lo}–${hi}</span>
-      <span>·</span>
+      <span class="badge-sep">·</span>
       <span class="conf">${confLabelPl(forecast.confidence)}</span>
     </div>
   `;
