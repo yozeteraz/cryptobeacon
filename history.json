@@ -58,19 +58,43 @@
       51,
       51,
       51,
-      51,
       48,
       47,
-      46
+      46,
+      45
     ],
     "bnb": [
       52,
       52,
       52,
-      52,
       51,
       50,
-      50
+      50,
+      49
+    ],
+    "btc_dzis": [
+      44
+    ],
+    "btc_tydzien": [
+      45
+    ],
+    "btc_miesiac": [
+      67
+    ],
+    "btc_kwartal": [
+      100
+    ],
+    "bnb_dzis": [
+      47
+    ],
+    "bnb_tydzien": [
+      59
+    ],
+    "bnb_miesiac": [
+      73
+    ],
+    "bnb_kwartal": [
+      74
     ]
   },
   "dca": [
