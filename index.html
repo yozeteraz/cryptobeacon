@@ -277,163 +277,76 @@
   .legend .lbl { color: var(--muted-2); font-size: 10px; margin: 0 4px; }
   .copyright { width: 100%; text-align: center; padding-top: 18px; margin-top: 14px; border-top: 1px solid var(--border); color: var(--muted-2); font-size: 11px; }
 
-  /* ===== NAVIGATION MODES ===== */
+  /* ===== iOS-STYLE MODAL SHEET (z dołu) ===== */
 
-  /* Hide all mode-specific elements by default; each mode opts in */
-  .back-chevron, .segmented-control, .sheet-handle, .sheet-close, .tab-bar, .sheet-backdrop { display: none !important; }
-  .detail-top .dots { display: none; }   /* dots phased out by all 3 new modes */
-
-  /* Floating switcher (always visible during testing) */
-  .nav-switcher {
-    position: fixed; bottom: 18px; right: 18px;
-    display: inline-flex; align-items: center; gap: 2px; padding: 4px;
-    background: rgba(22, 28, 39, 0.92);
-    backdrop-filter: blur(12px) saturate(140%);
-    -webkit-backdrop-filter: blur(12px) saturate(140%);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    z-index: 200;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-  }
-  .nav-switcher .nav-switcher-label {
-    font-size: 9px; font-weight: 600; letter-spacing: 0.14em;
-    color: var(--muted-2); padding: 0 8px 0 6px;
-  }
-  .nav-switcher button {
-    width: 26px; height: 26px;
-    border-radius: 6px;
-    font-size: 12px; font-weight: 600;
-    color: var(--muted);
-    transition: background 150ms, color 150ms;
-  }
-  .nav-switcher button.active { background: var(--panel-2); color: var(--text); }
-
-  /* Segmented control (iOS-native pill) */
-  .segmented-control {
-    padding: 3px; gap: 2px;
-    background: var(--panel-2); border: 1px solid var(--border);
-    border-radius: 9px;
-  }
-  .segmented-control .seg-btn {
-    padding: 6px 18px; border-radius: 6px;
-    font-size: 13px; font-weight: 600; color: var(--muted);
-    transition: background 150ms, color 150ms;
-  }
-  .segmented-control .seg-btn.active {
-    background: var(--panel); color: var(--text);
-    box-shadow: 0 1px 2px rgba(0,0,0,0.2);
-  }
-
-  /* iOS-style back chevron with label */
-  .back-chevron {
-    align-items: center; gap: 4px;
-    padding: 6px 10px 6px 6px;
-    border-radius: 8px;
-    color: var(--text);
-    transition: background 120ms;
-  }
-  .back-chevron:hover { background: var(--panel); }
-  .back-chevron .chevron { font-size: 22px; line-height: 1; font-weight: 300; }
-  .back-chevron .back-label { font-size: 14px; }
-
-  /* === Mode A: segmented control + iOS chevron back === */
-  body.nav-mode-a .back-chevron { display: flex !important; }
-  body.nav-mode-a .segmented-control { display: inline-flex !important; }
-  body.nav-mode-a .detail-top .asset-title { visibility: hidden; }
-  body.nav-mode-a .detail-top { gap: 12px; }
-
-  /* === Mode B: tab bar at bottom, no home === */
-  body.nav-mode-b #home-view { display: none !important; }
-  body.nav-mode-b .tab-bar { display: flex !important; }
-  body.nav-mode-b .detail-top { justify-content: center; }
-  body.nav-mode-b .detail-top .asset-title { font-size: 17px; font-weight: 600; }
-  body.nav-mode-b #detail-view { padding-bottom: 76px; }
-  .tab-bar {
-    position: fixed; bottom: 0; left: 0; right: 0;
-    display: flex; justify-content: space-around;
-    background: rgba(13, 17, 23, 0.92);
-    backdrop-filter: blur(20px) saturate(160%);
-    -webkit-backdrop-filter: blur(20px) saturate(160%);
-    border-top: 1px solid var(--border);
-    padding: 8px 24px calc(8px + env(safe-area-inset-bottom)) 24px;
-    z-index: 100;
-  }
-  .tab-bar .tab-btn {
-    flex: 1; max-width: 200px;
-    display: flex; flex-direction: column; align-items: center; gap: 2px;
-    padding: 6px 12px;
-    color: var(--muted-2);
-    transition: color 120ms;
-  }
-  .tab-bar .tab-btn.active { color: var(--text); }
-  .tab-bar .tab-btn .tab-glyph { font-size: 22px; line-height: 1; font-weight: 700; }
-  .tab-bar .tab-btn .tab-label { font-size: 10px; font-weight: 600; letter-spacing: 0.04em; }
-
-  /* === Mode C: modal sheet (slides up from bottom) === */
-  body.nav-mode-c .sheet-handle { display: block !important; }
-  body.nav-mode-c .sheet-close { display: flex !important; }
-  body.nav-mode-c .segmented-control { display: inline-flex !important; }
-  body.nav-mode-c .detail-top .asset-title { display: none; }
-
-  /* Re-position detail view as a sheet */
-  body.nav-mode-c #detail-view {
+  /* Detail view = modal sheet */
+  #detail-view {
     position: fixed; top: 0; left: 0; right: 0; bottom: 0;
     overflow-y: auto; overflow-x: hidden;
     background: var(--bg);
     border-top-left-radius: 14px; border-top-right-radius: 14px;
     transform: translateY(100%);
-    transition: transform 320ms cubic-bezier(0.32, 0.72, 0, 1);
+    transition: transform 360ms cubic-bezier(0.32, 0.72, 0, 1);
     z-index: 150;
-    padding: 0 24px 24px;
+    will-change: transform;
+    -webkit-overflow-scrolling: touch;
   }
-  body.nav-mode-c #detail-view.hidden { display: block !important; }
-  body.nav-mode-c #detail-view:not(.hidden) { transform: translateY(0); }
-  body.nav-mode-c .sheet-backdrop { display: block !important; }
-  body.nav-mode-c .sheet-backdrop {
+  #detail-view.hidden { display: block !important; pointer-events: none; }
+  #detail-view:not(.hidden) { transform: translateY(0); pointer-events: auto; }
+
+  /* Backdrop darkens home behind sheet */
+  .sheet-backdrop {
     position: fixed; inset: 0; background: rgba(0,0,0,0.55);
     opacity: 0; pointer-events: none;
     transition: opacity 320ms ease;
     z-index: 140;
   }
-  body.nav-mode-c.sheet-open .sheet-backdrop { opacity: 1; pointer-events: auto; }
-  body.nav-mode-c.sheet-open #home-view {
+  body.sheet-open .sheet-backdrop { opacity: 1; pointer-events: auto; }
+  body.sheet-open #home-view {
     transform: scale(0.96);
-    border-radius: 14px;
-    transition: transform 320ms ease, border-radius 320ms ease;
-    overflow: hidden;
+    transition: transform 320ms ease;
+    transform-origin: top center;
   }
 
-  /* Sheet handle (small bar at top center, mode C only) */
-  .sheet-handle {
-    width: 36px; height: 5px; border-radius: 3px;
-    background: var(--muted-2); opacity: 0.5;
-  }
-  body.nav-mode-c .detail-top {
-    display: grid !important;
-    grid-template-columns: 1fr auto;
-    grid-template-rows: auto auto;
-    gap: 10px 12px;
-    align-items: center; justify-items: start;
-    margin: 0 -24px 18px;
-    padding: 10px 24px 14px;
-    background: var(--bg);
+  /* Sheet header (sticky, blurred bg like iOS 26) */
+  .sheet-header {
     position: sticky; top: 0; z-index: 10;
+    background: rgba(13, 17, 23, 0.85);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border-bottom: 1px solid var(--border);
   }
-  body.nav-mode-c .sheet-handle {
-    grid-column: 1 / -1;
+  .sheet-handle {
+    width: 38px; height: 5px; border-radius: 3px;
+    background: var(--muted-2); opacity: 0.6;
+    margin: 8px auto 4px;
+  }
+  .sheet-nav {
+    display: grid; grid-template-columns: 1fr auto 1fr;
+    align-items: center; gap: 8px;
+    padding: 4px 16px 10px;
+  }
+  .back-chevron {
+    display: inline-flex; align-items: center; gap: 2px;
+    padding: 6px 8px 6px 4px; border-radius: 8px;
+    color: var(--text); font-size: 14px; font-weight: 500;
+    justify-self: start;
+    transition: background 120ms, opacity 120ms;
+  }
+  .back-chevron:hover { background: var(--panel); }
+  .back-chevron:active { opacity: 0.6; }
+  .back-chevron .chevron { font-size: 24px; line-height: 1; font-weight: 300; margin-right: 2px; }
+  .back-chevron .back-label { font-size: 14px; }
+  .asset-title {
+    text-align: center; display: flex; flex-direction: column;
+    align-items: center; line-height: 1.15;
     justify-self: center;
   }
-  body.nav-mode-c .segmented-control { grid-column: 1; grid-row: 2; }
-  body.nav-mode-c .sheet-close { grid-column: 2; grid-row: 2; }
-  /* Sheet close button (top-right of sheet) */
-  .sheet-close {
-    width: 32px; height: 32px; border-radius: 50%;
-    background: var(--panel-2); border: 1px solid var(--border);
-    align-items: center; justify-content: center;
-    font-size: 13px; color: var(--muted); font-weight: 600;
-    transition: background 120ms, color 120ms;
-  }
-  .sheet-close:hover { background: var(--panel); color: var(--text); }
+  .asset-title-name { font-size: 16px; font-weight: 600; color: var(--text); letter-spacing: -0.01em; }
+  .asset-title-sub { font-size: 11px; color: var(--muted); font-weight: 400; margin-top: 1px; }
+  .nav-spacer { width: 44px; justify-self: end; }
+
+  .sheet-content { padding: 18px 24px 32px; }
 
   @media (max-width: 600px) {
     .wrap { padding: 10px 12px 60px; }
@@ -478,15 +391,12 @@
     .asset-card .dca-pane .dca-history-summary { font-size: 10px; }
 
     /* Detail page mobile */
-    .detail-hero { padding: 14px 16px; }
-    .detail-hero .hero-score { font-size: 52px; }
     .strip.time { grid-template-columns: repeat(2, 1fr); }
     .stats-grid { grid-template-columns: 1fr; }
     .detail-panel { padding-right: 6px; }
     .detail-panel:last-child { padding-left: 6px; }
-
-    .nav-switcher { bottom: 12px; right: 12px; }
-    body.nav-mode-b #detail-view { padding-bottom: 86px; }
+    .sheet-content { padding: 14px 16px 32px; }
+    .sheet-nav { padding: 4px 12px 10px; }
   }
 
   /* Very narrow phones (<380px): fallback to stack */
@@ -519,90 +429,56 @@
     </section>
   </div>
 
-  <!-- DETAIL VIEW -->
+  <!-- DETAIL VIEW (iOS-style modal sheet) -->
   <div id="detail-view" class="view hidden">
-    <header class="top detail-top">
-      <!-- Drag handle (sheet mode C) -->
+    <div class="sheet-header" id="sheet-header">
       <div class="sheet-handle"></div>
-
-      <!-- Back chevron (mode A) -->
-      <button class="back back-chevron" id="back-btn" aria-label="Wróć">
-        <span class="chevron">‹</span><span class="back-label">Home</span>
-      </button>
-
-      <!-- Asset title (mode B; hidden in A/C since segmented covers it) -->
-      <div class="asset-title">
-        <span id="detail-name"></span>
-        <span class="muted" id="detail-sub"></span>
-      </div>
-
-      <!-- Segmented control (modes A and C) -->
-      <div class="segmented-control" id="segmented-control">
-        <button data-idx="0" data-asset="btc" class="seg-btn">BTC</button>
-        <button data-idx="1" data-asset="bnb" class="seg-btn">BNB</button>
-      </div>
-
-      <!-- Close X (mode C) -->
-      <button class="sheet-close" id="sheet-close-btn" aria-label="Zamknij">✕</button>
-
-      <!-- Legacy dots (hidden in all 3 new modes; kept as fallback) -->
-      <div class="dots">
-        <span class="dot" data-idx="0" data-asset="btc"></span>
-        <span class="dot" data-idx="1" data-asset="bnb"></span>
-      </div>
-    </header>
-
-    <div class="swipe-container" id="swipe-container">
-      <div class="swipe-track" id="swipe-track">
-        <div class="detail-panel" data-asset="btc"></div>
-        <div class="detail-panel" data-asset="bnb"></div>
-      </div>
+      <nav class="sheet-nav">
+        <button class="back-chevron" id="back-btn" aria-label="Wróć">
+          <span class="chevron">‹</span>
+          <span class="back-label">Home</span>
+        </button>
+        <div class="asset-title">
+          <span class="asset-title-name" id="detail-name"></span>
+          <span class="asset-title-sub" id="detail-sub"></span>
+        </div>
+        <div class="nav-spacer"></div>
+      </nav>
     </div>
 
-    <footer>
-      <div class="legend">
-        Skala 0–100:
-        <span class="swatch" style="background:var(--c-0)"></span>
-        <span class="swatch" style="background:var(--c-15)"></span>
-        <span class="swatch" style="background:var(--c-30)"></span>
-        <span class="swatch" style="background:var(--c-45)"></span>
-        <span class="swatch" style="background:var(--c-55)"></span>
-        <span class="swatch" style="background:var(--c-65)"></span>
-        <span class="swatch" style="background:var(--c-75)"></span>
-        <span class="swatch" style="background:var(--c-85)"></span>
-        <span class="swatch" style="background:var(--c-100)"></span>
-        <span class="lbl">0 strach · 50 spokój · 100 mania</span>
+    <div class="sheet-content">
+      <div class="swipe-container" id="swipe-container">
+        <div class="swipe-track" id="swipe-track">
+          <div class="detail-panel" data-asset="btc"></div>
+          <div class="detail-panel" data-asset="bnb"></div>
+        </div>
       </div>
-      <div class="legend">
-        Skala zmian: <strong>↑ 5</strong><span class="lbl">wzrost</span>·<strong>↓ 5</strong><span class="lbl">spadek</span>·<span class="lbl">brak strzałki = bez zmian</span>
-      </div>
-      <div class="copyright">© 2026 Marcin Gałęcki</div>
-    </footer>
+
+      <footer>
+        <div class="legend">
+          Skala 0–100:
+          <span class="swatch" style="background:var(--c-0)"></span>
+          <span class="swatch" style="background:var(--c-15)"></span>
+          <span class="swatch" style="background:var(--c-30)"></span>
+          <span class="swatch" style="background:var(--c-45)"></span>
+          <span class="swatch" style="background:var(--c-55)"></span>
+          <span class="swatch" style="background:var(--c-65)"></span>
+          <span class="swatch" style="background:var(--c-75)"></span>
+          <span class="swatch" style="background:var(--c-85)"></span>
+          <span class="swatch" style="background:var(--c-100)"></span>
+          <span class="lbl">0 strach · 50 spokój · 100 mania</span>
+        </div>
+        <div class="legend">
+          Skala zmian: <strong>↑ 5</strong><span class="lbl">wzrost</span>·<strong>↓ 5</strong><span class="lbl">spadek</span>·<span class="lbl">brak strzałki = bez zmian</span>
+        </div>
+        <div class="copyright">© 2026 Marcin Gałęcki</div>
+      </footer>
+    </div>
   </div>
 
-  <!-- Tab bar (mode B) -->
-  <nav class="tab-bar" id="tab-bar">
-    <button data-asset="btc" class="tab-btn">
-      <span class="tab-glyph" style="color:#f7931a">₿</span>
-      <span class="tab-label">BTC</span>
-    </button>
-    <button data-asset="bnb" class="tab-btn">
-      <span class="tab-glyph" style="color:#f0b90b">B</span>
-      <span class="tab-label">BNB</span>
-    </button>
-  </nav>
-
-  <!-- Sheet backdrop (mode C) -->
+  <!-- Sheet backdrop (darkens home behind the sheet) -->
   <div class="sheet-backdrop" id="sheet-backdrop"></div>
 
-</div>
-
-<!-- Nav mode switcher (floating, always visible during testing) -->
-<div class="nav-switcher" id="nav-switcher" title="Tryb nawigacji (A/B/C)">
-  <span class="nav-switcher-label">NAV</span>
-  <button data-mode="a">A</button>
-  <button data-mode="b">B</button>
-  <button data-mode="c">C</button>
 </div>
 
 <script>
@@ -940,16 +816,6 @@ function setActivePanel(idx, animate=true) {
   track.style.transition = animate ? "transform 220ms cubic-bezier(0.22, 0.61, 0.36, 1)" : "none";
   track.style.transform = `translateX(${-idx * 50}%)`;
 
-  document.querySelectorAll(".detail-top .dot").forEach((d, i) => {
-    d.classList.toggle("active", i === idx);
-  });
-  document.querySelectorAll(".segmented-control .seg-btn").forEach((b, i) => {
-    b.classList.toggle("active", i === idx);
-  });
-  document.querySelectorAll(".tab-bar .tab-btn").forEach((b, i) => {
-    b.classList.toggle("active", i === idx);
-  });
-
   if (appData && appData.assets[idx]) {
     document.getElementById("detail-name").textContent = appData.assets[idx].name;
     document.getElementById("detail-sub").textContent = appData.assets[idx].sub;
@@ -957,37 +823,15 @@ function setActivePanel(idx, animate=true) {
 }
 
 function applyRoute(route) {
-  const home = document.getElementById("home-view");
   const detail = document.getElementById("detail-view");
-  const mode = getNavMode();
-
-  // Mode B has no home — coerce
-  if (mode === "b" && route === "home") {
-    window.location.hash = "#/btc";
-    return;
-  }
-
   if (route === "home") {
-    if (mode === "c") {
-      // Sheet closes (slides down), home stays visible
-      detail.classList.add("hidden");
-      document.body.classList.remove("sheet-open");
-    } else {
-      home.classList.remove("hidden");
-      detail.classList.add("hidden");
-    }
-    window.scrollTo({ top: 0 });
+    detail.classList.add("hidden");
+    document.body.classList.remove("sheet-open");
   } else {
-    if (mode === "c") {
-      // Sheet opens over home
-      detail.classList.remove("hidden");
-      document.body.classList.add("sheet-open");
-    } else {
-      home.classList.add("hidden");
-      detail.classList.remove("hidden");
-    }
+    detail.classList.remove("hidden");
+    document.body.classList.add("sheet-open");
     setActivePanel(ASSETS.indexOf(route), false);
-    window.scrollTo({ top: 0 });
+    detail.scrollTo({ top: 0 });
   }
 }
 
@@ -1088,48 +932,9 @@ document.addEventListener("keydown", e => {
   }
 });
 
-/* Dots (legacy, hidden) + back button + segmented control + tab bar + sheet close */
-document.querySelectorAll(".detail-top .dot").forEach(dot => {
-  dot.addEventListener("click", () => navigateDetail(parseInt(dot.dataset.idx, 10)));
-});
-document.querySelectorAll(".segmented-control .seg-btn").forEach(btn => {
-  btn.addEventListener("click", () => navigateDetail(parseInt(btn.dataset.idx, 10)));
-});
-document.querySelectorAll(".tab-bar .tab-btn").forEach((btn, i) => {
-  btn.addEventListener("click", () => navigate(btn.dataset.asset));
-});
+/* Back chevron + backdrop tap → close sheet */
 document.getElementById("back-btn").addEventListener("click", () => navigate("home"));
-document.getElementById("sheet-close-btn").addEventListener("click", () => navigate("home"));
 document.getElementById("sheet-backdrop").addEventListener("click", () => navigate("home"));
-
-/* Nav mode switcher (A/B/C) */
-function getNavMode() {
-  const m = localStorage.getItem("nav-mode");
-  return (m === "a" || m === "b" || m === "c") ? m : "a";
-}
-function setNavMode(m) { localStorage.setItem("nav-mode", m); }
-
-function applyNavMode() {
-  const m = getNavMode();
-  document.body.classList.remove("nav-mode-a", "nav-mode-b", "nav-mode-c");
-  document.body.classList.add(`nav-mode-${m}`);
-  document.querySelectorAll("#nav-switcher button").forEach(b => {
-    b.classList.toggle("active", b.dataset.mode === m);
-  });
-  // Mode B: no home — if user is on home, push to btc
-  if (m === "b" && routeFromHash() === "home") {
-    window.location.hash = "#/btc";
-  }
-  // Re-apply current route under new mode (handles sheet open/close transitions)
-  applyRoute(routeFromHash());
-}
-
-document.querySelectorAll("#nav-switcher button").forEach(b => {
-  b.addEventListener("click", () => {
-    setNavMode(b.dataset.mode);
-    applyNavMode();
-  });
-});
 
 /* Bootstrap */
 fetch("data.json?_t=" + Date.now())
@@ -1139,7 +944,7 @@ fetch("data.json?_t=" + Date.now())
     renderHome(data);
     renderDetail(data);
     attachSwipe();
-    applyNavMode();
+    applyRoute(routeFromHash());
   })
   .catch(err => {
     console.error("Failed to load data.json:", err);
