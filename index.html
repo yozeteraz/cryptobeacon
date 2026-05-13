@@ -277,76 +277,106 @@
   .legend .lbl { color: var(--muted-2); font-size: 10px; margin: 0 4px; }
   .copyright { width: 100%; text-align: center; padding-top: 18px; margin-top: 14px; border-top: 1px solid var(--border); color: var(--muted-2); font-size: 11px; }
 
-  /* ===== iOS-STYLE MODAL SHEET (z dołu) ===== */
+  /* ===== iOS-NATIVE MODAL SHEET (per Apple HIG) ===== */
 
-  /* Detail view = modal sheet */
+  /* Sheet pokazuje peek 10pt parent view — iOS 17+ pattern */
   #detail-view {
-    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    position: fixed; top: 10px; left: 0; right: 0; bottom: 0;
     overflow-y: auto; overflow-x: hidden;
-    background: var(--bg);
-    border-top-left-radius: 14px; border-top-right-radius: 14px;
-    transform: translateY(100%);
-    transition: transform 360ms cubic-bezier(0.32, 0.72, 0, 1);
+    background: var(--panel);
+    border-top-left-radius: 20px; border-top-right-radius: 20px;
+    transform: translateY(calc(100% + 10px));
+    /* iOS spring-style ease */
+    transition: transform 460ms cubic-bezier(0.32, 0.72, 0, 1);
     z-index: 150;
     will-change: transform;
     -webkit-overflow-scrolling: touch;
+    /* Soft shadow above (depth) — iOS sheets nie mają hard shadow */
+    box-shadow: 0 -1px 0 rgba(255,255,255,0.04), 0 -16px 40px rgba(0, 0, 0, 0.45);
   }
   #detail-view.hidden { display: block !important; pointer-events: none; }
   #detail-view:not(.hidden) { transform: translateY(0); pointer-events: auto; }
 
-  /* Backdrop darkens home behind sheet */
+  /* Backdrop — iOS uses ~rgba(0,0,0,0.4) for sheet dim */
   .sheet-backdrop {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+    position: fixed; inset: 0; background: rgba(0,0,0,0.4);
     opacity: 0; pointer-events: none;
-    transition: opacity 320ms ease;
+    transition: opacity 400ms ease;
     z-index: 140;
   }
   body.sheet-open .sheet-backdrop { opacity: 1; pointer-events: auto; }
   body.sheet-open #home-view {
-    transform: scale(0.96);
-    transition: transform 320ms ease;
+    transform: scale(0.94);
+    border-radius: 12px;
+    transition: transform 460ms cubic-bezier(0.32, 0.72, 0, 1), border-radius 460ms ease;
     transform-origin: top center;
+    overflow: hidden;
   }
 
-  /* Sheet header (sticky, blurred bg like iOS 26) */
+  /* Sheet header — iOS Material: thin blur + saturate (Liquid Glass-y) */
   .sheet-header {
     position: sticky; top: 0; z-index: 10;
-    background: rgba(13, 17, 23, 0.85);
-    backdrop-filter: blur(20px) saturate(160%);
-    -webkit-backdrop-filter: blur(20px) saturate(160%);
-    border-bottom: 1px solid var(--border);
+    background: rgba(28, 35, 48, 0.72);
+    backdrop-filter: blur(30px) saturate(180%);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
+    border-top-left-radius: 20px; border-top-right-radius: 20px;
+    border-bottom: 0.5px solid rgba(255,255,255,0.08);
   }
+
+  /* Grabber — 36×5pt, ~50% alpha, 5pt from top per HIG */
   .sheet-handle {
-    width: 38px; height: 5px; border-radius: 3px;
-    background: var(--muted-2); opacity: 0.6;
-    margin: 8px auto 4px;
+    width: 36px; height: 5px; border-radius: 2.5px;
+    background: rgba(255, 255, 255, 0.45);
+    margin: 5px auto 0;
   }
+
+  /* Nav bar — 44pt height (HIG touch target) */
   .sheet-nav {
     display: grid; grid-template-columns: 1fr auto 1fr;
     align-items: center; gap: 8px;
-    padding: 4px 16px 10px;
+    padding: 6px 8px 8px;
+    min-height: 44px;
   }
+
+  /* iOS bar button item — 17pt regular, tint color (gold accent per brand) */
   .back-chevron {
     display: inline-flex; align-items: center; gap: 2px;
-    padding: 6px 8px 6px 4px; border-radius: 8px;
-    color: var(--text); font-size: 14px; font-weight: 500;
+    padding: 6px 10px 6px 4px;
+    border-radius: 8px;
+    color: var(--accent); font-size: 17px; font-weight: 400;
     justify-self: start;
-    transition: background 120ms, opacity 120ms;
+    letter-spacing: -0.01em;
+    transition: opacity 100ms;
+    min-height: 44px;     /* HIG: 44pt touch target */
+    min-width: 44px;
+    background: transparent;
   }
-  .back-chevron:hover { background: var(--panel); }
-  .back-chevron:active { opacity: 0.6; }
-  .back-chevron .chevron { font-size: 24px; line-height: 1; font-weight: 300; margin-right: 2px; }
-  .back-chevron .back-label { font-size: 14px; }
+  .back-chevron:active { opacity: 0.35; }
+  /* Chevron glyph — symuluje SF Symbol "chevron.backward" — 17pt weight semibold */
+  .back-chevron .chevron {
+    font-size: 22px; line-height: 1; font-weight: 600;
+    margin-right: 2px;
+  }
+  .back-chevron .back-label {
+    font-size: 17px; font-weight: 400;
+  }
+
+  /* iOS bar title — 17pt semibold, optional caption pod (Stocks-style) */
   .asset-title {
     text-align: center; display: flex; flex-direction: column;
-    align-items: center; line-height: 1.15;
-    justify-self: center;
+    align-items: center; line-height: 1.1; justify-self: center;
   }
-  .asset-title-name { font-size: 16px; font-weight: 600; color: var(--text); letter-spacing: -0.01em; }
-  .asset-title-sub { font-size: 11px; color: var(--muted); font-weight: 400; margin-top: 1px; }
+  .asset-title-name {
+    font-size: 17px; font-weight: 600; color: var(--text);
+    letter-spacing: -0.02em;
+  }
+  .asset-title-sub {
+    font-size: 11px; color: var(--muted); font-weight: 400;
+    margin-top: 1px; letter-spacing: 0.01em;
+  }
   .nav-spacer { width: 44px; justify-self: end; }
 
-  .sheet-content { padding: 18px 24px 32px; }
+  .sheet-content { padding: 18px 24px 40px; }
 
   @media (max-width: 600px) {
     .wrap { padding: 24px 12px 60px; }
