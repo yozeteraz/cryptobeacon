@@ -645,7 +645,7 @@ function dcaIn7d(asset) {
 
 function assetCardInnerHtml(asset) {
   const pctCls = pctChangeClass(asset.price_change_24h);
-  const dca = asset.dca;
+  const dca = asset.dca || { decision: "—", history: [] };
   const yes = dca.history.filter(v => v === 1).length;
   const no = dca.history.length - yes;
   const days = dca.history.map(v => `<span class="day ${v ? 'yes' : 'no'}"></span>`).join("");
@@ -655,6 +655,11 @@ function assetCardInnerHtml(asset) {
       <div class="dca-col-label">Za 7 dni</div>
       <div class="dca-value ${dca7d === 'TAK' ? '' : 'no'}">${dca7d}</div>
     </div>` : "";
+  const priceHtml = asset.price ? `
+      <div class="asset-price-row">
+        <span class="asset-price">${asset.price}</span>
+        ${asset.price_change_24h !== undefined ? `<span class="asset-price-change ${pctCls}">${fmtPct(asset.price_change_24h)} 24h</span>` : ""}
+      </div>` : "";
   return `
     <div class="pane score-pane">
       <div class="pane-head">
@@ -667,10 +672,7 @@ function assetCardInnerHtml(asset) {
       ${sparklineSvg(asset.history, 300, 36, "asset-spark")}
       <div class="asset-mood">${asset.mood}</div>
       ${forecastBadgeHtml(asset.forecast)}
-      <div class="asset-price-row">
-        <span class="asset-price">${asset.price}</span>
-        <span class="asset-price-change ${pctCls}">${fmtPct(asset.price_change_24h)} 24h</span>
-      </div>
+      ${priceHtml}
     </div>
     <div class="pane dca-pane">
       <div class="pane-head">Kupić ${asset.name}?</div>
@@ -811,7 +813,7 @@ function renderDetailPanel(panelEl, asset) {
   // Narrative
   const narr = document.createElement("section");
   narr.className = "detail-narrative";
-  narr.innerHTML = `<p>${asset.narrative}</p>`;
+  narr.innerHTML = `<p>${asset.narrative || "Czekam na świeże dane z najbliższego odświeżenia."}</p>`;
 
   // Time strip
   const timeBlock = document.createElement("section");
@@ -822,7 +824,7 @@ function renderDetailPanel(panelEl, asset) {
     <div class="strip time"></div>
   `;
   const strip = timeBlock.querySelector(".strip.time");
-  asset.time.forEach(t => strip.appendChild(renderTimeCell(t)));
+  (asset.time || []).forEach(t => strip.appendChild(renderTimeCell(t)));
 
   // Metryki
   const metrics = document.createElement("section");
