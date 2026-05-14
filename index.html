@@ -51,7 +51,9 @@
   header.top { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 48px; flex-wrap: wrap; }
   header.top .brand { display: flex; align-items: center; color: #ffffff; }
   header.top .brand .brand-logo { height: 34px; width: auto; display: block; }
+  header.top .date-block { text-align: right; line-height: 1.3; }
   header.top .date { color: var(--muted); font-size: 13px; }
+  header.top .date-refresh { color: var(--muted-2); font-size: 11px; margin-top: 2px; letter-spacing: 0.02em; }
 
   /* HOME — widgety BTC + BNB stackowane, każdy 2 kolumny (score + DCA) połączone hairline */
   .widgets { display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px; }
@@ -446,7 +448,10 @@
           <text x="360" y="60" text-anchor="middle" dominant-baseline="central" font-family="Helvetica Neue, Helvetica, Inter, Arial, sans-serif" font-weight="500" font-size="96" letter-spacing="-1.44" fill="currentColor" style="font-feature-settings: 'liga' 0, 'calt' 0;">CryptoBeacon</text>
         </svg>
       </div>
-      <div class="date" id="home-date"></div>
+      <div class="date-block">
+        <div class="date" id="home-date"></div>
+        <div class="date-refresh" id="home-refresh"></div>
+      </div>
     </header>
 
     <div class="widgets" id="home-widgets"></div>
@@ -662,6 +667,11 @@ function renderDetailWidget(asset) {
 
 function renderHome(data) {
   document.getElementById("home-date").textContent = data.header_label;
+  if (data.fetched_at) {
+    const t = new Date(data.fetched_at);
+    const hhmm = t.toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" });
+    document.getElementById("home-refresh").textContent = `odśw. ${hhmm}`;
+  }
   document.getElementById("home-narrative").innerHTML = data.narrative;
   const widgets = document.getElementById("home-widgets");
   widgets.innerHTML = "";
