@@ -216,49 +216,22 @@
   .stat-tf-val.down { color: #f87171; }
   .stat-tf-val.flat { color: var(--muted-2); }
 
-  /* Forecast block (detail page) */
+  /* Forecast block (detail page) — uproszczone: 1 linia + DCA tip */
   .forecast-block {
     background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
-    padding: 18px 22px;
+    padding: 16px 20px;
   }
-  .forecast-block .fc-summary { display: flex; flex-direction: column; gap: 4px; margin-bottom: 16px; }
-  .forecast-block .fc-range { font-size: 22px; font-weight: 700; color: var(--text); letter-spacing: -0.01em; }
-  .forecast-block .fc-range .fc-arrow { color: var(--cell-color); margin-right: 6px; }
-  .forecast-block .fc-mood { font-size: 13px; color: var(--muted); }
-  .forecast-block .fc-conf { font-size: 12px; color: var(--muted); margin-top: 6px; }
-  .forecast-block .fc-conf-value { color: var(--text); font-weight: 600; }
-  .forecast-block .fc-rules-label {
-    font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted-2);
-    padding-top: 14px; border-top: 1px solid var(--border); margin-bottom: 8px;
+  .forecast-block .fc-line {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 16px; color: var(--text); font-weight: 500;
+    letter-spacing: -0.01em;
   }
-  .forecast-block .fc-rule {
-    display: grid; grid-template-columns: 110px 44px 1fr; gap: 10px; align-items: baseline;
-    padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 12.5px;
+  .forecast-block .fc-line .fc-arrow {
+    font-size: 22px; color: var(--cell-color); font-weight: 700; line-height: 1;
   }
-  .forecast-block .fc-rule:last-of-type { border-bottom: none; }
-  .forecast-block .fc-rule .fc-name { color: var(--muted); }
-  .forecast-block .fc-rule .fc-delta { font-weight: 700; text-align: right; }
-  .forecast-block .fc-rule .fc-delta.up { color: var(--pos); }
-  .forecast-block .fc-rule .fc-delta.down { color: var(--neg); }
-  .forecast-block .fc-rule .fc-delta.flat { color: var(--muted-2); }
-  .forecast-block .fc-rule .fc-note { color: var(--text); opacity: 0.85; }
-  .forecast-block .fc-sum {
-    display: grid; grid-template-columns: 110px 44px 1fr; gap: 10px;
-    padding: 10px 0 4px; margin-top: 4px;
-    border-top: 1px solid var(--border);
-    font-size: 12.5px; font-weight: 600;
-  }
-  .forecast-block .fc-sum .fc-sum-label { color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; font-size: 10px; }
-  .forecast-block .fc-sum .fc-delta { text-align: right; }
-  .forecast-block .fc-disclaimer {
-    margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border);
-    font-size: 11px; font-style: italic; color: var(--muted-2); line-height: 1.5;
-  }
-
-  @media (max-width: 600px) {
-    .forecast-block .fc-rule, .forecast-block .fc-sum {
-      grid-template-columns: 100px 40px 1fr; gap: 8px;
-    }
+  .forecast-block .fc-tip {
+    margin-top: 10px; font-size: 13px;
+    color: var(--muted); line-height: 1.5;
   }
 
   /* Mini hint for upcoming features (etap 3/4) */
@@ -726,42 +699,30 @@ function renderForecastBlock(asset) {
   const [lo, hi] = f.score_range;
   const midColor = scoreColor(Math.round((lo + hi) / 2));
   const arrow = forecastArrow(f.direction);
-  const rulesHtml = f.rules.map(r => {
-    const cls = r.delta > 0 ? "up" : r.delta < 0 ? "down" : "flat";
-    const sign = r.delta > 0 ? "+" : "";
-    return `
-      <div class="fc-rule">
-        <span class="fc-name">${r.name}</span>
-        <span class="fc-delta ${cls}">${sign}${r.delta}</span>
-        <span class="fc-note">${r.note}</span>
-      </div>
-    `;
-  }).join("");
-  const totalCls = f.total_delta > 0 ? "up" : f.total_delta < 0 ? "down" : "flat";
-  const totalSign = f.total_delta > 0 ? "+" : "";
-  let summary;
-  if (f.direction === "up") summary = "Bias lekko bullish";
-  else if (f.direction === "down") summary = "Bias lekko bearish";
-  else summary = "Bias neutralny — sygnały się równoważą";
+
+  let headline, dcaTip;
+  if (f.direction === "up") {
+    headline = "Sentyment wzmacnia się w tygodniu";
+    dcaTip = hi >= 75 ? "Rynek się grzeje — DCA dziś OK, ale następne tygodnie mogą być droższe." : "DCA dziś OK, jutro też prawdopodobnie dobra okazja.";
+  } else if (f.direction === "down") {
+    headline = "Sentyment cofa się w tygodniu";
+    dcaTip = "DCA dziś OK — możesz też poczekać, prawdopodobnie wkrótce taniej.";
+  } else {
+    headline = "Sentyment stabilny w tygodniu";
+    dcaTip = "DCA dziś bezpieczny — sytuacja bez większych zmian.";
+  }
+  if (f.confidence === "low") {
+    dcaTip += " (sygnał chwiejny)";
+  }
+
   return `
-    <h3 class="section">Forecast 7 dni</h3>
-    <p class="section-sub">Rules-based prognoza pasma sentymentu w horyzoncie tygodnia. Cztery składowe: wolumen, mean reversion, momentum, cykl.</p>
+    <h3 class="section">Za 7 dni</h3>
     <div class="forecast-block" style="--cell-color:${midColor}">
-      <div class="fc-summary">
-        <div class="fc-range"><span class="fc-arrow">${arrow}</span>${lo}–${hi}</div>
-        <div class="fc-mood">${f.mood_range}</div>
-        <div class="fc-conf">Konwikcja: <span class="fc-conf-value">${confLabelPl(f.confidence)}</span></div>
+      <div class="fc-line">
+        <span class="fc-arrow">${arrow}</span>
+        <span class="fc-text">${headline}</span>
       </div>
-      <div class="fc-rules-label">Reguły</div>
-      ${rulesHtml}
-      <div class="fc-sum">
-        <span class="fc-sum-label">Suma</span>
-        <span class="fc-delta ${totalCls}">${totalSign}${f.total_delta}</span>
-        <span>${summary}</span>
-      </div>
-      <div class="fc-disclaimer">
-        Forecast to rule-based ekstrapolacja z widocznego setupu — nie sygnał handlowy. Konwikcja ${confLabelPl(f.confidence)} oznacza ${f.confidence === "high" ? "zgodne sygnały, ale rynek wciąż może zaskoczyć" : f.confidence === "medium" ? "wyraźny rozjazd reguł — spodziewaj się odchyleń" : "silny rozjazd reguł i nieprzewidywalność"}.
-      </div>
+      <div class="fc-tip">${dcaTip}</div>
     </div>
   `;
 }
