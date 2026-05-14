@@ -127,11 +127,15 @@ Filozofia: rynek jest w dużej mierze efektywny i krótkoterminowo emocjonalny, 
 
 ## Plan etapów
 
-1. ✅ **MVP** — ceny + wolumeny z CoinGecko → reguły scoring → dynamiczne dane w HTML. **Ukończone 2026-05-11.** Binance API porzucone bo HTTP 451 na GitHub Actions runners (US data centers); CoinGecko działa globalnie. Automatyzacja przez GitHub Actions cron (nie launchd — bo Mac może być wyłączony) wepchnięta od razu do etapu 1.
-2. **Sentyment z Claude API** — call do API z surowymi danymi, otrzymujemy score + label + komentarz + narrację. Zastępuje obecne rules-based scoringi i template-narrative w `fetch.py`. *Wymaga klucza API z console.anthropic.com (~$5/3mc).*
-3. **On-chain BTC/BNB** — net flows do Binance (mempool.space + hardcoded lista wallet'ów Binance), aktywność BSC przez BSC RPC. Wszystko w detalach komórek aktywów lub jako nowe stat blocki.
-4. **Newsy i wydarzenia** — RSS (CoinDesk + CoinTelegraph) + Binance announcements JSON. LLM streszcza top 4–6 z 24h do sekcji "Wydarzenia".
-5. **Alerty zdarzeniowe** (opcjonalne) — Telegram push przy progowych zmianach (funding, MVRV, duży news regulacyjny).
+> **Zasada projektu (decyzja 2026-05-14):** zero płatnych API. Trzymamy się darmowych źródeł i rules-based logiki. Etap 2 (LLM) został odrzucony.
+
+1. ✅ **MVP** — ceny + wolumeny z CoinGecko → reguły scoring → dynamiczne dane w HTML. **Ukończone 2026-05-11.** Binance API porzucone (HTTP 451 z GitHub Actions); CoinGecko działa globalnie. GitHub Actions cron — od 2026-05-14 lecimy co 1h zamiast 3×/dzień.
+2. ⚙️ **Etap 1.5 — wzmocnienie MVP** (ukończone 2026-05-14):
+   - Restruktura UI: 2 widgety BTC/BNB hairline-połączone, detail pages jako iOS modal sheet (drag handle, blur Material, slide-up), forecast 7d rules-based z 4 regułami (volume/mean-reversion/momentum/cykl), DCA per-asset (Dziś / Za 7 dni), header z czasem ostatniej aktualizacji.
+3. ❌ **Sentyment z Claude API** — **ODRZUCONE 2026-05-14**. Zostajemy na rules-based scoring + template narrative. Powód: użytkownik nie chce płacić za API. Patrz [[feedback_no_paid_apis]].
+4. ⬜ **On-chain BTC/BNB** — net flows do Binance (mempool.space + hardcoded lista wallet'ów Binance), aktywność BSC przez BSC RPC. Darmowe źródła. Mini-placeholder „Niebawem: on-chain" już teaserowany na detalach.
+5. ⬜ **Newsy i wydarzenia** — RSS (CoinDesk + CoinTelegraph) + Binance announcements JSON. **Bez LLM streszczeń** — tylko surowe nagłówki + link out, albo template-based brief. Mini-placeholder „Niebawem: newsy" już teaserowany.
+6. ⬜ **Alerty zdarzeniowe** (opcjonalne) — Telegram bot (darmowy) push przy progowych zmianach.
 
 ## Otwarte — do potwierdzenia z użytkownikiem przed startem etapu 1
 
