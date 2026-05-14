@@ -2,8 +2,8 @@ name: Refresh data
 
 on:
   schedule:
-    # 06:00, 12:00, 19:00 UTC — w czasie letnim (CEST, UTC+2) to 8:00 / 14:00 / 21:00 Warszawa
-    - cron: '0 6,12,19 * * *'
+    # Co godzinę — 24×/dzień. Wciąż głęboko pod free tierem CoinGecko.
+    - cron: '0 * * * *'
   workflow_dispatch:  # ręczny trigger z GitHub UI
 
 permissions:

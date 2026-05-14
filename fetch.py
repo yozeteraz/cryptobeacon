@@ -15,8 +15,8 @@ from pathlib import Path
 ROOT = Path(__file__).parent
 DATA_FILE = ROOT / "data.json"
 HISTORY_FILE = ROOT / "history.json"
-SPARKLINE_LEN = 7
-DCA_HISTORY_LEN = 30
+SPARKLINE_LEN = 24      # last 24 entries — przy cron co 1h to last 24h trendu
+DCA_HISTORY_LEN = 30    # 30 dni (push_dca dedupluje po dacie)
 HALVING_DATE = datetime(2024, 4, 19)  # Bitcoin 4th halving
 
 DAY_NAMES_PL = ["poniedziałek", "wtorek", "środa", "czwartek", "piątek", "sobota", "niedziela"]
