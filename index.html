@@ -259,13 +259,13 @@
     }
   }
 
-  /* Placeholder sections (etap 3 / 4) */
-  .placeholder {
-    background: var(--panel); border: 1px dashed var(--border); border-radius: 12px;
-    padding: 18px 22px; opacity: 0.6;
+  /* Mini hint for upcoming features (etap 3/4) */
+  .upcoming-hint {
+    margin-top: 18px; padding: 10px 14px;
+    font-size: 11px; color: var(--muted-2);
+    text-align: center; font-style: italic;
+    border-top: 1px solid var(--border);
   }
-  .placeholder h3.section { margin-bottom: 4px; }
-  .placeholder p { margin: 0; font-size: 12px; color: var(--muted-2); }
 
   footer {
     margin-top: 36px; padding-top: 22px; border-top: 1px solid var(--border);
@@ -338,28 +338,26 @@
     min-height: 44px;
   }
 
-  /* iOS bar button item — 17pt regular, tint color (gold accent per brand) */
-  .back-chevron {
-    display: inline-flex; align-items: center; gap: 2px;
-    padding: 6px 10px 6px 4px;
-    border-radius: 8px;
-    color: var(--accent); font-size: 17px; font-weight: 400;
-    justify-self: start;
-    letter-spacing: -0.01em;
-    transition: opacity 100ms;
-    min-height: 44px;     /* HIG: 44pt touch target */
-    min-width: 44px;
+  /* iOS-native close button (X) — circle pill w prawym górnym rogu */
+  .sheet-close-x {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 44px; height: 44px;
+    justify-self: end;
     background: transparent;
+    transition: opacity 120ms;
   }
-  .back-chevron:active { opacity: 0.35; }
-  /* Chevron glyph — symuluje SF Symbol "chevron.backward" — 17pt weight semibold */
-  .back-chevron .chevron {
-    font-size: 22px; line-height: 1; font-weight: 600;
-    margin-right: 2px;
+  .sheet-close-x:active { opacity: 0.55; }
+  .sheet-close-x .x-mark {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.14);
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 13px; font-weight: 700;
+    line-height: 1;
+    transition: background 120ms;
   }
-  .back-chevron .back-label {
-    font-size: 17px; font-weight: 400;
-  }
+  .sheet-close-x:hover .x-mark { background: rgba(255, 255, 255, 0.2); }
 
   /* iOS bar title — 17pt semibold, optional caption pod (Stocks-style) */
   .asset-title {
@@ -374,7 +372,7 @@
     font-size: 11px; color: var(--muted); font-weight: 400;
     margin-top: 1px; letter-spacing: 0.01em;
   }
-  .nav-spacer { width: 44px; justify-self: end; }
+  .nav-spacer { width: 44px; justify-self: start; }
 
   .sheet-content { padding: 18px 24px 40px; }
 
@@ -464,15 +462,14 @@
     <div class="sheet-header" id="sheet-header">
       <div class="sheet-handle"></div>
       <nav class="sheet-nav">
-        <button class="back-chevron" id="back-btn" aria-label="Wróć">
-          <span class="chevron">‹</span>
-          <span class="back-label">Home</span>
-        </button>
+        <div class="nav-spacer"></div>
         <div class="asset-title">
           <span class="asset-title-name" id="detail-name"></span>
           <span class="asset-title-sub" id="detail-sub"></span>
         </div>
-        <div class="nav-spacer"></div>
+        <button class="sheet-close-x" id="back-btn" aria-label="Zamknij">
+          <span class="x-mark">✕</span>
+        </button>
       </nav>
     </div>
 
@@ -796,20 +793,10 @@ function renderDetailPanel(panelEl, asset) {
   forecast.className = "block";
   forecast.innerHTML = renderForecastBlock(asset);
 
-  // Placeholders
-  const onchain = document.createElement("section");
-  onchain.className = "block placeholder";
-  onchain.innerHTML = `
-    <h3 class="section">On-chain · 24h</h3>
-    <p>Net flow ${asset.name} na Binance, whale tx — dostępne w etapie 3.</p>
-  `;
-
-  const newsy = document.createElement("section");
-  newsy.className = "block placeholder";
-  newsy.innerHTML = `
-    <h3 class="section">Wydarzenia ${asset.name} · 24h</h3>
-    <p>Newsy filtrowane per asset — dostępne w etapie 4.</p>
-  `;
+  // Mini placeholder for upcoming features (on-chain, newsy)
+  const upcoming = document.createElement("div");
+  upcoming.className = "upcoming-hint";
+  upcoming.innerHTML = `Niebawem: on-chain ${asset.name}, newsy filtrowane per asset.`;
 
   panelEl.innerHTML = "";
   panelEl.appendChild(widget);
@@ -817,8 +804,7 @@ function renderDetailPanel(panelEl, asset) {
   panelEl.appendChild(timeBlock);
   panelEl.appendChild(metrics);
   panelEl.appendChild(forecast);
-  panelEl.appendChild(onchain);
-  panelEl.appendChild(newsy);
+  panelEl.appendChild(upcoming);
 }
 
 function renderDetail(data) {
