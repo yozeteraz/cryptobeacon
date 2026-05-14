@@ -234,7 +234,45 @@
     color: var(--muted); line-height: 1.5;
   }
 
-  /* Mini hint for upcoming features (etap 3/4) */
+  /* Events / Wydarzenia (etap 4) */
+  .events-block {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+    padding: 4px 20px;
+  }
+  .events-list { list-style: none; padding: 0; margin: 0; }
+  .events-list li {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .events-list li:last-child { border-bottom: none; }
+  .ev-meta {
+    display: flex; gap: 6px; align-items: center; flex-wrap: wrap;
+    margin-bottom: 6px; font-size: 11px; color: var(--muted-2);
+  }
+  .ev-when { color: var(--muted-2); }
+  .ev-tag {
+    font-size: 9px; padding: 2px 7px; border-radius: 4px;
+    background: var(--panel-2); color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600;
+  }
+  .ev-tag.ev-tag-binance { color: #f0b90b; background: rgba(240, 185, 11, 0.12); }
+  .ev-tag.ev-tag-regulacje { color: #ef4444; background: rgba(239, 68, 68, 0.12); }
+  .ev-tag.ev-tag-makro { color: #4ade80; background: rgba(74, 222, 128, 0.12); }
+  .ev-tag.ev-tag-onchain { color: #c4a878; background: rgba(196, 168, 120, 0.12); }
+  .ev-title {
+    display: block;
+    color: var(--text); font-size: 14px; font-weight: 500;
+    text-decoration: none; line-height: 1.4;
+    transition: opacity 120ms;
+  }
+  .ev-title:hover { opacity: 0.7; }
+  .ev-source { font-size: 11px; color: var(--muted-2); margin-top: 4px; }
+  .events-empty {
+    padding: 18px 0; text-align: center;
+    font-size: 12px; color: var(--muted-2); font-style: italic;
+  }
+
+  /* Mini hint for upcoming features (etap 3) */
   .upcoming-hint {
     margin-top: 18px; padding: 10px 14px;
     font-size: 11px; color: var(--muted-2);
@@ -693,6 +731,56 @@ function renderStat(s) {
   return stat;
 }
 
+function formatRelativeTime(iso) {
+  const date = new Date(iso);
+  const now = new Date();
+  const diffMin = Math.max(0, Math.floor((now - date) / 60000));
+  if (diffMin < 1) return "teraz";
+  if (diffMin < 60) return `${diffMin} min temu`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr}h temu`;
+  const diffDay = Math.floor(diffHr / 24);
+  return `${diffDay}d temu`;
+}
+
+function tagClass(tag) {
+  return "ev-tag-" + tag.toLowerCase().replace("-", "");
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function renderEventsBlock(asset, allEvents) {
+  if (!allEvents || allEvents.length === 0) return "";
+  const events = allEvents.filter(e => (e.assets || []).includes(asset.key)).slice(0, 6);
+  let inner;
+  if (events.length === 0) {
+    inner = `<div class="events-empty">Brak istotnych wydarzeń dla ${asset.name} w ostatnich 24h.</div>`;
+  } else {
+    inner = `<ul class="events-list">` + events.map(e => {
+      const tagsHtml = (e.tags || []).map(t =>
+        `<span class="ev-tag ${tagClass(t)}">${t}</span>`
+      ).join("");
+      return `
+        <li>
+          <div class="ev-meta">
+            <span class="ev-when">${formatRelativeTime(e.published_at)}</span>
+            ${tagsHtml}
+          </div>
+          <a class="ev-title" href="${e.url}" target="_blank" rel="noopener">${escapeHtml(e.title)}</a>
+          <div class="ev-source">${e.source}</div>
+        </li>
+      `;
+    }).join("") + `</ul>`;
+  }
+  return `
+    <h3 class="section">Wydarzenia · ostatnie 24h</h3>
+    <p class="section-sub">Top nagłówki z CoinDesk, CoinTelegraph i Binance, filtrowane pod ${asset.name}.</p>
+    <div class="events-block">${inner}</div>
+  `;
+}
+
 function renderForecastBlock(asset) {
   const f = asset.forecast;
   if (!f) return "";
@@ -727,7 +815,7 @@ function renderForecastBlock(asset) {
   `;
 }
 
-function renderDetailPanel(panelEl, asset) {
+function renderDetailPanel(panelEl, asset, allEvents) {
   panelEl.dataset.asset = asset.key;
 
   // Widget (same as home: score + DCA hairline-joined)
@@ -764,10 +852,15 @@ function renderDetailPanel(panelEl, asset) {
   forecast.className = "block";
   forecast.innerHTML = renderForecastBlock(asset);
 
-  // Mini placeholder for upcoming features (on-chain, newsy)
+  // Events / Wydarzenia (etap 4)
+  const events = document.createElement("section");
+  events.className = "block";
+  events.innerHTML = renderEventsBlock(asset, allEvents);
+
+  // Mini placeholder for remaining upcoming features (on-chain only)
   const upcoming = document.createElement("div");
   upcoming.className = "upcoming-hint";
-  upcoming.innerHTML = `Niebawem: on-chain ${asset.name}, newsy filtrowane per asset.`;
+  upcoming.innerHTML = `Niebawem: on-chain ${asset.name} (net flows na Binance, whale tx).`;
 
   panelEl.innerHTML = "";
   panelEl.appendChild(widget);
@@ -775,13 +868,15 @@ function renderDetailPanel(panelEl, asset) {
   panelEl.appendChild(timeBlock);
   panelEl.appendChild(metrics);
   panelEl.appendChild(forecast);
+  panelEl.appendChild(events);
   panelEl.appendChild(upcoming);
 }
 
 function renderDetail(data) {
   const panels = document.querySelectorAll(".detail-panel");
+  const events = data.events || [];
   data.assets.forEach((a, i) => {
-    if (panels[i]) renderDetailPanel(panels[i], a);
+    if (panels[i]) renderDetailPanel(panels[i], a, events);
   });
 }
 

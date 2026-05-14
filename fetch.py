@@ -9,7 +9,9 @@ więc na GitHub Actions używamy CoinGecko (działa globalnie).
 
 import json
 import urllib.request
-from datetime import datetime, timezone
+import xml.etree.ElementTree as ET
+from datetime import datetime, timezone, timedelta
+from email.utils import parsedate_to_datetime
 from pathlib import Path
 
 ROOT = Path(__file__).parent
@@ -315,6 +317,140 @@ def asset_time_block(asset_key, history, pct_24h, pct_7d, pct_30d, pct_90d, fng,
     ]
 
 
+# ---------- News & events (etap 4) ----------
+
+NEWS_USER_AGENT = "Mozilla/5.0 (cryptobeacon/0.2; +https://cryptobeacon.vercel.app)"
+
+TAG_KEYWORDS = {
+    "Binance": ["binance", "bnb", "changpeng", "cz "],
+    "Regulacje": ["sec ", "cftc", "regulat", "lawsuit", "approve", "ruling", "court", "fine ", "clarity act", " ban "],
+    "Makro": ["fed ", "fomc", " rate", "inflation", "cpi", "treasury", "powell", "dollar", "fed's", "interest rate"],
+    "On-chain": ["etf", "wallet", "flow", "transfer", "halving", "mempool", "tokeniz", "spot bitcoin", "spot ether", "whale"],
+}
+
+ASSET_KEYWORDS = {
+    "btc": ["bitcoin", "btc", "halving"],
+    "bnb": ["bnb", "binance"],
+}
+
+
+def fetch_rss(url, source_name):
+    """Fetch RSS, return list of {title, url, published_dt, source}."""
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": NEWS_USER_AGENT})
+        with urllib.request.urlopen(req, timeout=20) as r:
+            content = r.read()
+        root = ET.fromstring(content)
+        items = []
+        for item in root.iter("item"):
+            title_el = item.find("title")
+            link_el = item.find("link")
+            pubdate_el = item.find("pubDate")
+            if title_el is None or link_el is None or pubdate_el is None:
+                continue
+            try:
+                dt = parsedate_to_datetime(pubdate_el.text)
+                if dt.tzinfo is None:
+                    dt = dt.replace(tzinfo=timezone.utc)
+            except Exception:
+                continue
+            items.append({
+                "title": (title_el.text or "").strip(),
+                "url": (link_el.text or "").strip(),
+                "published_dt": dt,
+                "source": source_name,
+            })
+        return items
+    except Exception as e:
+        print(f"RSS fetch failed ({source_name}): {e}")
+        return []
+
+
+def fetch_binance_news():
+    """Fetch Binance announcements (type=1 = listings)."""
+    try:
+        url = ("https://www.binance.com/bapi/composite/v1/public/cms/article/"
+               "list/query?type=1&pageNo=1&pageSize=15")
+        req = urllib.request.Request(url, headers={"User-Agent": NEWS_USER_AGENT})
+        with urllib.request.urlopen(req, timeout=20) as r:
+            data = json.loads(r.read())
+        items = []
+        for catalog in data.get("data", {}).get("catalogs", []):
+            for art in catalog.get("articles", []):
+                ts_ms = art.get("releaseDate", 0)
+                code = art.get("code", "")
+                title = (art.get("title") or "").strip()
+                if not ts_ms or not code or not title:
+                    continue
+                dt = datetime.fromtimestamp(ts_ms / 1000, tz=timezone.utc)
+                items.append({
+                    "title": title,
+                    "url": f"https://www.binance.com/en/support/announcement/{code}",
+                    "published_dt": dt,
+                    "source": "Binance",
+                })
+        return items
+    except Exception as e:
+        print(f"Binance news fetch failed: {e}")
+        return []
+
+
+def tag_event(text):
+    t = text.lower()
+    tags = []
+    for tag, keywords in TAG_KEYWORDS.items():
+        if any(k in t for k in keywords):
+            tags.append(tag)
+    return tags
+
+
+def event_assets(text, tags):
+    """Return which asset detail pages should show this event."""
+    t = text.lower()
+    assets = []
+    for asset, keywords in ASSET_KEYWORDS.items():
+        if any(k in t for k in keywords):
+            assets.append(asset)
+    # Makro & Regulacje affect everyone
+    if "Regulacje" in tags or "Makro" in tags:
+        if "btc" not in assets: assets.append("btc")
+        if "bnb" not in assets: assets.append("bnb")
+    # If nothing matched explicitly, show on both
+    if not assets:
+        assets = ["btc", "bnb"]
+    return assets
+
+
+def fetch_all_events(max_total=15, max_age_hours=24):
+    """Fetch from all news sources, filter by recency, tag, return sorted list."""
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=max_age_hours)
+    raw = []
+    raw += fetch_rss("https://www.coindesk.com/arc/outboundfeeds/rss?outputType=xml", "CoinDesk")
+    raw += fetch_rss("https://cointelegraph.com/rss", "CoinTelegraph")
+    raw += fetch_binance_news()
+
+    events = []
+    for item in raw:
+        if item["published_dt"] < cutoff:
+            continue
+        tags = tag_event(item["title"])
+        assets = event_assets(item["title"], tags)
+        events.append({
+            "title": item["title"],
+            "url": item["url"],
+            "published_at": item["published_dt"].isoformat(),
+            "source": item["source"],
+            "tags": tags,
+            "assets": assets,
+        })
+
+    events.sort(key=lambda e: e["published_at"], reverse=True)
+    return events[:max_total]
+
+
+# ---------- main ----------
+
+
 def main():
     print("Fetching data...")
 
@@ -435,6 +571,10 @@ def main():
     btc_forecast = build_forecast(btc_score, btc_prices, btc_vol, btc_vol_30d_avg, fng, months_since_halving)
     bnb_forecast = build_forecast(bnb_score, bnb_prices, bnb_vol, bnb_vol_30d_avg, fng, months_since_halving)
 
+    print("Fetching news (etap 4)...")
+    events = fetch_all_events()
+    print(f"  Got {len(events)} events from last 24h")
+
     history = load_history()
     btc_hist = push_score(history, "btc", btc_score)
     bnb_hist = push_score(history, "bnb", bnb_score)
@@ -451,6 +591,7 @@ def main():
         "fetched_at": datetime.now(timezone.utc).isoformat(),
         "header_label": header_label,
         "narrative": narrative,
+        "events": events,
         "assets": [
             {
                 "key": "btc",
